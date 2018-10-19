@@ -6,7 +6,7 @@ import rospy
 from sensor_msgs.msg import JointState
 
 
-class ForwardKinematics:
+class ForwardKinematics(object):
     """Interface to MoveIt! forward kinematics service."""
 
     def __init__(self):
@@ -66,7 +66,7 @@ class ForwardKinematics:
         return fk_result
 
 
-class InverseKinematics:
+class InverseKinematics(object):
     """Interface to MoveIt! inverse kinematics service."""
 
     def __init__(self):
@@ -126,7 +126,7 @@ class InverseKinematics:
         return ik_result
 
 
-class StateValidity:
+class StateValidity(object):
     """Interface to MoveIt! StateValidity service."""
 
     def __init__(self):
