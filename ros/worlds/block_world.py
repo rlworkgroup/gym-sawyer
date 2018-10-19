@@ -23,7 +23,7 @@ except ImportError:
         "   VICON_TOPICS = []")
 
 
-class Block:
+class Block(object):
     def __init__(self, name, initial_pos, random_delta_range, resource=None):
         """
         Task Object interface
