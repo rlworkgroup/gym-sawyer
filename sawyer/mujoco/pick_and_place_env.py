@@ -1,8 +1,8 @@
 from gym.spaces import Box
 import numpy as np
 
-from garage.envs.mujoco.sawyer.sawyer_env import Configuration, SawyerEnv
-from garage.misc.overrides import overrides
+from sawyer.mujoco.sawyer_env import Configuration, SawyerEnv
+from sawyer.garage.misc.overrides import overrides
 
 
 class PickAndPlaceEnv(SawyerEnv):

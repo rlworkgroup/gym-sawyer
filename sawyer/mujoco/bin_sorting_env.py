@@ -1,9 +1,9 @@
 import numpy as np
 
-from garage.core import Serializable
-from garage.envs import Step
-from garage.envs.mujoco.sawyer.sawyer_env import SawyerEnv
-from garage.misc.overrides import overrides
+from sawyer.garage.core import Serializable
+from sawyer.garage.envs import Step
+from sawyer.mujoco.sawyer_env import SawyerEnv
+from sawyer.garage.misc.overrides import overrides
 
 
 class BinSortingEnv(SawyerEnv, Serializable):
