@@ -7,7 +7,7 @@ import numpy as np
 import rospy
 
 from garage.baselines import LinearFeatureBaseline
-from garage.contrib.ros.envs.sawyer import ReacherEnv
+from sawyer.ros.envs.sawyer import ReacherEnv
 from garage.envs.util import spec
 from garage.misc.instrument import run_experiment
 from garage.theano.algos import TRPO

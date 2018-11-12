@@ -4,7 +4,7 @@ ORANGE='\033[0;33m'
 WHITE='\033[1;37m'
 
 export USER=sawyer_docker
-export GARAGE_PYTHON=/opt/conda/envs/garage/bin/python
+export PYTHON=/usr/bin/python3.6
 
 # Clean up bashrc
 echo "export USER=sawyer_docker" > "/home/$USER/.bashrc"
@@ -15,11 +15,8 @@ source /opt/ros/kinetic/setup.bash
 echo "export USER=$USER" >> "/home/$USER/.bashrc"
 echo "export HOME=/home/$USER" >> "/home/$USER/.bashrc"
 
-export PATH=$PATH:/opt/conda/bin
-echo 'export PATH=$PATH:/opt/conda/bin' >> "/home/$USER/.bashrc"
-
-export GARAGE_CODE_ROOT=/root/code/garage
-echo 'export GARAGE_CODE_ROOT=/root/code/garage' >> "/home/$USER/.bashrc"
+export SAWYER_CODE_ROOT=/root/code/gym-sawyer
+echo 'export SAWYER_CODE_ROOT=/root/code/gym-sawyer' >> "/home/$USER/.bashrc"
 
 export ROS_WS=/home/$USER/ros_ws
 echo 'export ROS_WS=/home/$USER/ros_ws' >> "/home/$USER/.bashrc"
@@ -214,8 +211,8 @@ rosdep install -y --from-paths src --ignore-src --rosdistro kinetic
 
 # Build ROS_WS
 # convert python2 code to python3
-chmod +x /root/code/garage/garage/contrib/ros/scripts/sawyer_2to3.sh
-/root/code/garage/garage/contrib/ros/scripts/sawyer_2to3.sh "/home/$USER/ros_ws/src/"
+chmod +x $SAWYER_CODE_ROOT/sawyer/ros/scripts/sawyer_2to3.sh
+$SAWYER_CODE_ROOT/sawyer/ros/scripts/sawyer_2to3.sh "/home/$USER/ros_ws/src/"
 source /opt/ros/kinetic/setup.bash
 cd "/home/$USER/ros_ws"
 
@@ -226,12 +223,12 @@ export CMAKE_PREFIX_PATH=/usr/local:$CMAKE_PREFIX_PATH
 rm /usr/lib/x86_64-linux-gnu/libboost_python.so
 ln -s /usr/lib/x86_64-linux-gnu/libboost_python-py35.so /usr/lib/x86_64-linux-gnu/libboost_python.so
 
-catkin_make -DPYTHON_EXECUTABLE:FILEPATH=$GARAGE_PYTHON -DCATKIN_BLACKLIST_PACKAGES='moveit_setup_assistant'
+catkin_make -DPYTHON_EXECUTABLE:FILEPATH=$PYTHON -DCATKIN_BLACKLIST_PACKAGES='moveit_setup_assistant'
 
 # Copy the sawyer simulation launch file and simulation world file
-cp $GARAGE_CODE_ROOT/garage/contrib/ros/envs/sawyer/sawyer_learning.launch $ROS_WS/src/sawyer_simulator/sawyer_gazebo/launch
-cp $GARAGE_CODE_ROOT/garage/contrib/ros/envs/sawyer/sawyer_world_learning.launch $ROS_WS/src/sawyer_simulator/sawyer_gazebo/launch
-cp $GARAGE_CODE_ROOT/garage/contrib/ros/envs/sawyer/sawyer_learning.world $ROS_WS/src/sawyer_simulator/sawyer_gazebo/worlds/
+cp $SAWYER_CODE_ROOT/sawyer/ros/envs/sawyer/sawyer_learning.launch $ROS_WS/src/sawyer_simulator/sawyer_gazebo/launch
+cp $SAWYER_CODE_ROOT/sawyer/ros/envs/sawyer/sawyer_world_learning.launch $ROS_WS/src/sawyer_simulator/sawyer_gazebo/launch
+cp $SAWYER_CODE_ROOT/sawyer/ros/envs/sawyer/sawyer_learning.world $ROS_WS/src/sawyer_simulator/sawyer_gazebo/worlds/
 
 if [ -f /opt/ros/kinetic/lib/python2.7/dist-packages/cv2.so ] ; then
   rm /opt/ros/kinetic/lib/python2.7/dist-packages/cv2.so
