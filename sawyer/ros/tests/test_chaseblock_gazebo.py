@@ -81,7 +81,7 @@ def run():
         target_pose = Pose()
 
         target_pose.position = block_position
-        target_pose.position.z += 0.10
+        target_pose.position.z -= 0.9
         target_pose.orientation.x = 0
         target_pose.orientation.y = 1
         target_pose.orientation.z = 0

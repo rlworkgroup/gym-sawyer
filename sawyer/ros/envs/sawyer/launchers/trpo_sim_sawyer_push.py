@@ -2,7 +2,7 @@ import numpy as np
 import rospy
 
 from garage.baselines.linear_feature_baseline import LinearFeatureBaseline
-from garage.contrib.ros.envs.sawyer.push_env import PushEnv
+from sawyer.ros.envs.sawyer.push_env import PushEnv
 from garage.envs.util import spec
 from garage.misc.instrument import run_experiment
 from garage.theano.algos import TRPO

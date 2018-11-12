@@ -1,7 +1,5 @@
 #!/bin/sh
 
-ROBOT=${1:-"sawyer"}
-
 USER_UID=$(id -u)
 USER_GID=$(id -g)
 
@@ -19,29 +17,19 @@ fi
 
 DOCKER_VISUAL_NVIDIA="-v /tmp/.X11-unix:/tmp/.X11-unix --device /dev/nvidia0 --device /dev/nvidiactl"
 
-if [ "$ROBOT" = "sawyer" ] ; then
-  docker run \
-	  -it \
-	  --rm \
-	  --runtime=nvidia \
-	  --init \
-	  $DOCKER_VISUAL_NVIDIA \
-	  --env="USER_UID=${USER_UID}" \
-	  --env="USER_GID=${USER_GID}" \
-	  --env="USER=${USER}" \
-	  --env="DISPLAY" \
-	  --env="QT_X11_NO_MITSHM=1" \
-	  --volume=/home/:/home/:rw \
-	  --volume=/dev/bus/usb:/dev/bus/usb:ro \
-	  --volume=/media:/media:rw \
-	  --cap-add SYS_ADMIN \
-	  --cap-add MKNOD \
-	  --device /dev/fuse \
-	  --name "sawyer-ros-docker" \
-	  --security-opt apparmor:unconfined \
-    sawyer-ros-docker:gpu bash;
-else
-  echo "The robot "$ROBOT" is not supported by us!";
-fi
+docker run \
+	-it \
+	--rm \
+	--runtime=nvidia \
+	--init \
+	$DOCKER_VISUAL_NVIDIA \
+	--env="DISPLAY" \
+	--env="QT_X11_NO_MITSHM=1" \
+	--cap-add SYS_ADMIN \
+	--cap-add MKNOD \
+	--device /dev/fuse \
+	--name "sawyer-ros-docker" \
+	--security-opt apparmor:unconfined \
+sawyer-ros-docker:gpu bash;
 
 xhost -local:root

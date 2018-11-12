@@ -196,7 +196,7 @@ class BlockWorld(World):
                 osp.join(World.MODEL_DIR, 'cafe_table/model.sdf'))
             Gazebo.load_gazebo_model(
                 'block',
-                Pose(position=Point(x=0.5725, y=0.1265, z=0.05)),
+                Pose(position=Point(x=0.5725, y=0.1265, z=0.9)),
                 osp.join(World.MODEL_DIR, 'block/model.urdf'))
             block_name = 'block_{}'.format(len(self._blocks))
             block = Block(
