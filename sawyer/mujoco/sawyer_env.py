@@ -289,12 +289,12 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
             curr_pos = self.joint_positions
 
             next_pos = np.clip(
-                a + curr_pos[2:],
-                self.joint_position_space.low[2:],
-                self.joint_position_space.high[2:]
+                a + curr_pos[:],
+                self.joint_position_space.low[:],
+                self.joint_position_space.high[:]
             )
             for _ in range(4):
-                self.sim.data.ctrl[2:] = next_pos
+                self.sim.data.ctrl[:] = next_pos
                 self.sim.forward()
                 self.sim.step()
         else:
