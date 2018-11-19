@@ -1,4 +1,4 @@
-"""Push task for the sawyer robot."""
+"""Pusher task for the sawyer robot."""
 
 import collections
 
@@ -10,9 +10,24 @@ from sawyer.ros.envs.sawyer.sawyer_env import SawyerEnv
 from sawyer.ros.robots import Sawyer
 from sawyer.ros.worlds import BlockWorld
 from sawyer.garage.core import Serializable
+from garage.misc.overrides import overrides
 
 
-class PushEnv(SawyerEnv, Serializable):
+# To keep magnitude of shaping reward should be smaller than task reward
+SHAPE_REWARD_SCALE = 0.2
+
+
+def compute_distance(pos_a, pos_b):
+    """
+    :param pos_a:
+    :param pos_b:
+    :return distance: distance between pos_a and pos_b
+    """
+    assert pos_a.shape == pos_b.shape
+    return np.linalg.norm(pos_a - pos_b, axis=-1)
+
+
+class PusherEnv(SawyerEnv, Serializable):
     def __init__(self,
                  initial_goal,
                  initial_joint_pos,
@@ -20,9 +35,12 @@ class PushEnv(SawyerEnv, Serializable):
                  simulated=False,
                  distance_threshold=0.05,
                  target_range=0.15,
-                 robot_control_mode='position'):
+                 robot_control_mode='position',
+                 completion_bonus=0.,
+                 *args,
+                 **kwargs):
         """
-        Push task for the sawyer robot.
+        Pusher task for the sawyer robot.
 
         :param initial_goal: np.array()
                     the initial goal of pnp task,
@@ -39,6 +57,8 @@ class PushEnv(SawyerEnv, Serializable):
                     the range within which the new target is randomized
         :param robot_control_mode: string
                     control mode 'position'/'velocity'/'effort'
+        :param completion_bonus: int
+                    bonus for robot when it completes task in one episode
         """
         Serializable.quick_init(self, locals())
 
@@ -48,6 +68,7 @@ class PushEnv(SawyerEnv, Serializable):
         self.initial_goal = initial_goal
         self.goal = self.initial_goal.copy()
         self.simulated = simulated
+        self._completion_bonus = completion_bonus
 
         # Initialize moveit to get safety check
         self._moveit_robot = moveit_commander.RobotCommander()
@@ -64,7 +85,10 @@ class PushEnv(SawyerEnv, Serializable):
                                  self._moveit_robot.get_planning_frame(),
                                  simulated)
 
-        SawyerEnv.__init__(self, simulated=simulated)
+        SawyerEnv.__init__(self,
+                           simulated=simulated,
+                           *args,
+                           **kwargs)
 
     @property
     def observation_space(self):
@@ -102,23 +126,48 @@ class PushEnv(SawyerEnv, Serializable):
                      'achieved_goal': achieved_goal,
                      'desired_goal': self.goal}
         """
-        robot_obs = self._robot.get_observation()
+        limb_joint_positions = self._robot.limb_joint_positions
 
-        world_obs = self._world.get_observation()
+        blocks_position = self._world.get_blocks_position()
+        blocks_orientation = self._world.get_blocks_orientation()
 
-        obs = np.concatenate((robot_obs, world_obs.obs))
+        block_pos_obs = np.array([])
+        for position in blocks_position:
+            block_pos_obs = np.concatenate(
+                (block_pos_obs, np.array([position.x, position.y,
+                                          position.z])))
+
+        block_ori_obs = np.array([])
+        for orientation in blocks_orientation:
+            block_ori_obs = np.concatenate(
+                (block_ori_obs,
+                 np.array([orientation.w, orientation.x, orientation.y, orientation.z])))
+
+        gripper_pos = self._robot.gripper_pose['position']
+        print(gripper_pos)
+        gripper_pos = np.array([gripper_pos.x, gripper_pos.y, gripper_pos.z - 0.03])
+
+        initial_jpos = np.array(
+            [-0.4839443359375, -0.991173828125, -2.3821015625, -1.9510517578125, -0.5477119140625, -0.816458984375,
+             -0.816326171875])
+
+        delta_limb_joint_positions = limb_joint_positions - initial_jpos
+
+        obs = np.concatenate((delta_limb_joint_positions, gripper_pos - block_pos_obs, np.array([0., 0., 0., 0.])))
+        # print(obs)
 
         Observation = collections.namedtuple(
             'Observation', 'observation achieved_goal desired_goal')
 
         observation = Observation(
             observation=obs,
-            achieved_goal=world_obs.achieved_goal,
+            achieved_goal=block_pos_obs,
             desired_goal=self.goal)
 
         return observation
 
-    def reward(self, achieved_goal, goal):
+    @overrides
+    def reward(self, achieved_goal, goal, *args, **kwargs):
         """
         Compute the reward for current step.
 
@@ -128,29 +177,30 @@ class PushEnv(SawyerEnv, Serializable):
         :param goal: np.array
                     the goal of the current training episode, which mostly
                     is the target position of the object or the position.
+        :param action: np.array
+                    used to compute control cost
         :return reward: float
                     if sparse_reward, the reward is -1, else the
                     reward is minus distance from achieved_goal to
                     our goal. And we have completion bonus for two
                     kinds of types.
         """
-        d = self._goal_distance(achieved_goal, goal)
+        gripper_pos = self._robot.gripper_pose['position']
+        gripper_pos = np.array([gripper_pos.x, gripper_pos.y, gripper_pos.z])
+        # shapeing reward is used to attract gripper to move to the block
+        shaping_reward = - compute_distance(gripper_pos, achieved_goal) * SHAPE_REWARD_SCALE
+
+        d = compute_distance(achieved_goal, goal)
         if d < self._distance_threshold:
-            return 100
+            task_reward = self._completion_bonus
         else:
             if self._sparse_reward:
-                return -1.
+                task_reward = -1.
             else:
-                return -d
+                task_reward = -d
+        reward = shaping_reward + task_reward
 
-    def _goal_distance(self, goal_a, goal_b):
-        """
-        :param goal_a:
-        :param goal_b:
-        :return distance: distance between goal_a and goal_b
-        """
-        assert goal_a.shape == goal_b.shape
-        return np.linalg.norm(goal_a - goal_b, axis=-1)
+        return reward
 
     def done(self, achieved_goal, goal):
         """
@@ -160,8 +210,8 @@ class PushEnv(SawyerEnv, Serializable):
                     if current episode is done:
         """
         if not self._robot.safety_check():
-            done = True
+            done = False
+            print('Done')
         else:
-            done = self._goal_distance(achieved_goal,
-                                       goal) < self._distance_threshold
+            done = compute_distance(achieved_goal, goal) < self._distance_threshold
         return done

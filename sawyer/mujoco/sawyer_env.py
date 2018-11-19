@@ -41,11 +41,91 @@ COLLISION_WHITELIST = [
     ("r_gripper_l_finger_tip", "r_gripper_r_finger_tip"),
     ("r_gripper_l_finger_tip", "r_gripper_r_finger"),
     ("r_gripper_r_finger_tip", "r_gripper_l_finger"),
+    ("task_marker", "right_l0"),
+    ("task_marker", "right_l1"),
+    ("task_marker", "right_l1_2"),
+    ("task_marker", "right_l2"),
+    ("task_marker", "right_l2_2"),
+    ("task_marker", "right_l3"),
+    ("task_marker", "right_l4"),
+    ('task_marker', 'right_l4_2'),
+    ("task_marker", "right_l5"),
+    ("task_marker", "right_l6"),
+    ("task_marker", "right_gripper_base"),
+    ("task_marker", "right_hand"),
+    ("task_marker", "r_gripper_r_finger"),
+    ("task_marker", "r_gripper_r_finger_tip"),
+    ("task_marker", "r_gripper_l_finger"),
+    ("task_marker", "r_gripper_l_finger_tip"),
+    ("object0", "right_l0"),
+    ("object0", "right_l1"),
+    ("object0", "right_l1_2"),
+    ("object0", "right_l2"),
+    ("object0", "right_l2_2"),
+    ("object0", "right_l3"),
+    ("object0", "right_l4"),
+    ("object0", "right_l4_2"),
+    ("object0", "right_l5"),
+    ("object0", "right_l6"),
+    ("object0", "right_gripper_base"),
+    ("object0", "right_hand"),
+    ("object0", "r_gripper_r_finger"),
+    ("object0", "r_gripper_r_finger_tip"),
+    ("object0", "r_gripper_l_finger"),
+    ("object0", "r_gripper_l_finger_tip"),
+    ("mocap", "right_l0"),
+    ("mocap", "right_l1"),
+    ("mocap", "right_l1_2"),
+    ("mocap", "right_l2"),
+    ("mocap", "right_l2_2"),
+    ("mocap", "right_l3"),
+    ("mocap", "right_l4"),
+    ('mocap', 'right_l4_2'),
+    ("mocap", "right_l5"),
+    ("mocap", "right_l6"),
+    ("mocap", "right_gripper_base"),
+    ("mocap", "right_hand"),
+    ("mocap", "r_gripper_r_finger"),
+    ("mocap", "r_gripper_r_finger_tip"),
+    ("mocap", "r_gripper_l_finger"),
+    ("mocap", "r_gripper_l_finger_tip"),
+    ("achieved_goal", "right_l0"),
+    ("achieved_goal", "right_l1"),
+    ("achieved_goal", "right_l1_2"),
+    ("achieved_goal", "right_l2"),
+    ("achieved_goal", "right_l2_2"),
+    ("achieved_goal", "right_l3"),
+    ("achieved_goal", "right_l4"),
+    ("achieved_goal", "right_l4_2"),
+    ("achieved_goal", "right_l5"),
+    ("achieved_goal", "right_l6"),
+    ("achieved_goal", "right_gripper_base"),
+    ("achieved_goal", "right_hand"),
+    ("achieved_goal", "r_gripper_r_finger"),
+    ("achieved_goal", "r_gripper_r_finger_tip"),
+    ("achieved_goal", "r_gripper_l_finger"),
+    ("achieved_goal", "r_gripper_l_finger_tip"),
+    ("desired_goal", "right_l0"),
+    ("desired_goal", "right_l1"),
+    ("desired_goal", "right_l1_2"),
+    ("desired_goal", "right_l2"),
+    ("desired_goal", "right_l2_2"),
+    ("desired_goal", "right_l3"),
+    ("desired_goal", "right_l4"),
+    ("desired_goal", "right_l4_2"),
+    ("desired_goal", "right_l5"),
+    ("desired_goal", "right_l6"),
+    ("desired_goal", "right_gripper_base"),
+    ("desired_goal", "right_hand"),
+    ("desired_goal", "r_gripper_r_finger"),
+    ("desired_goal", "r_gripper_r_finger_tip"),
+    ("desired_goal", "r_gripper_l_finger"),
+    ("desired_goal", "r_gripper_l_finger_tip"),
 ]
 
-Configuration = namedtuple(
-    "Configuration",
-    ["gripper_pos", "gripper_state", "object_grasped", "object_pos"])
+Configuration = namedtuple("Configuration", [
+    "gripper_pos", "gripper_state", "object_grasped", "object_pos", "joint_pos"
+])
 
 
 def default_reward_fn(env, achieved_goal, desired_goal, _info: dict):
@@ -81,7 +161,7 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
                  desired_goal_fn=default_desired_goal_fn,
                  max_episode_steps=50,
                  completion_bonus=10,
-                 distance_threshold=0.05,
+                 distance_threshold=0.01,
                  for_her=False,
                  control_cost_coeff=0.,
                  action_scale=1.0,
@@ -98,6 +178,10 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
                  **kwargs):
         """
         Sawyer Environment.
+
+        :param initial_goal: The initial goal for the goal environment.
+        :param initial_qpos: The initial position for each joint.
+        :param target_range: delta range the goal is randomized.
         :param args:
         :param kwargs:
         """
@@ -201,7 +285,11 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
 
     @property
     def gripper_position(self):
-        return self.sim.data.get_body_xpos("r_gripper_r_finger_tip")
+        return np.copy(self.sim.data.get_site_xpos('grip')) # - np.array([0., 0., .1])  # 0.1 offset for the finger
+
+    @property
+    def finger_position(self):
+        return np.copy(self.sim.data.get_site_xpos('finger'))
 
     def force_object_down(self):
         curr_position = self.object_position
@@ -219,7 +307,11 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
 
     @property
     def object_position(self):
-        return self.sim.data.get_geom_xpos('object0')
+        return self.sim.data.get_body_xpos('object0').copy()
+
+    @property
+    def object_orientation(self):
+        return self.sim.data.get_body_xquat('object0').copy()
 
     @property
     def has_object(self):
@@ -228,8 +320,8 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
         for coni in range(self.sim.data.ncon):
             con = self.sim.data.contact[coni]
             contacts += ((con.geom1, con.geom2), )
-        finger_id_1 = self.sim.model.geom_name2id('finger_tip_1')
-        finger_id_2 = self.sim.model.geom_name2id('finger_tip_2')
+        finger_id_1 = self.sim.model.geom_name2id('finger_1')
+        finger_id_2 = self.sim.model.geom_name2id('finger_2')
         object_id = self.sim.model.geom_name2id('object0')
         if ((finger_id_1, object_id) in contacts or
             (object_id, finger_id_1) in contacts) and (
@@ -251,7 +343,7 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
                 dtype=np.float32)
         elif self._control_method == 'position_control':
             return Box(
-                low=np.full(9, -0.02), high=np.full(9, 0.02), dtype=np.float32)
+                low=np.full(7, -0.04), high=np.full(7, 0.04), dtype=np.float32)
         else:
             raise NotImplementedError
 
@@ -279,7 +371,8 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
             self.sim.forward()
         elif self._control_method == "task_space_control":
             reset_mocap2body_xpos(self.sim)
-            self.sim.data.mocap_pos[0, :3] = self.sim.data.mocap_pos[0, :3] + a[:3]
+            self.sim.data.mocap_pos[0, :
+                                    3] = self.sim.data.mocap_pos[0, :3] + a[:3]
             self.sim.data.mocap_quat[:] = np.array([0, 1, 0, 0])
             self.set_gripper_state(a[3])
             for _ in range(5):
@@ -287,16 +380,19 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
             self.sim.forward()
         elif self._control_method == "position_control":
             curr_pos = self.joint_positions
+            next_pos = np.clip(a + curr_pos, self.joint_position_space.low,
+                               self.joint_position_space.high)
+            self.joint_positions = next_pos
+            self.sim.forward()
 
-            next_pos = np.clip(
-                a + curr_pos[:],
-                self.joint_position_space.low[:],
-                self.joint_position_space.high[:]
-            )
-            for _ in range(4):
-                self.sim.data.ctrl[:] = next_pos
-                self.sim.forward()
-                self.sim.step()
+            # Verify the execution of the action.
+            # for i in range(7):
+            #     curr_pos = self.joint_positions
+            #     d = np.absolute(curr_pos[i] - next_pos[i])
+            #     assert d < 1e-5, \
+            #     "Joint right_j{} failed to reached the desired qpos.\nError: {}\t Desired: {}\t Current: {}"\
+            #     .format(i, d, next_pos[i], curr_pos)
+
         else:
             raise NotImplementedError
         self._step += 1
@@ -306,6 +402,8 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
         # collision checking is expensive so cache the value
         in_collision = self.in_collision
 
+        self._achieved_goal = obs.get('achieved_goal')
+        self._desired_goal = obs.get('desired_goal')
         info = {
             "l": self._step,
             "grasped": obs["has_object"],
@@ -317,16 +415,19 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
         }
 
         r = self.compute_reward(
-            achieved_goal=self._achieved_goal,
-            desired_goal=self._desired_goal,
+            achieved_goal=obs.get('achieved_goal'),
+            desired_goal=obs.get('desired_goal'),
             info=info)
 
         self._is_success = self._success_fn(self, self._achieved_goal,
                                             self._desired_goal, info)
         done = False
 
+        # control cost
+        r -= self._control_cost_coeff * np.linalg.norm(a)
+
         # collision detection
-        if in_collision:
+        if self.in_collision:
             r -= self._collision_penalty
             if self._terminate_on_collision:
                 done = True
@@ -362,19 +463,24 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
         grasped = self.has_object
         obs = np.concatenate([
             gripper_pos,
-            object_pos.ravel(),  # TODO remove object_pos (reveals task id)
-            object_rel_pos.ravel(),
-            object_rot.ravel(),
-            object_velp.ravel(),
-            object_velr.ravel(),
-            grip_velp,
+            object_pos.ravel(),
+            # object_rel_pos.ravel(),
+            # object_rot.ravel(),
+            # object_velp.ravel(),
+            # object_velr.ravel(),
+            # grip_velp,
             qpos,
-            qvel,
-            [float(grasped), self.gripper_state],
+            # qvel,
+            # [float(grasped), self.gripper_state],
         ])
 
         achieved_goal = self._achieved_goal_fn(self)
         desired_goal = self._desired_goal_fn(self)
+
+        achieved_goal_qpos = np.concatenate((achieved_goal, [1, 0, 0, 0]))
+        self.sim.data.set_joint_qpos('achieved_goal:joint', achieved_goal_qpos)
+        desired_goal_qpos = np.concatenate((desired_goal, [1, 0, 0, 0]))
+        self.sim.data.set_joint_qpos('desired_goal:joint', desired_goal_qpos)
 
         return {
             'observation': obs,
@@ -397,6 +503,7 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
         for c in self._get_collisions():
             if c not in self._collision_whitelist:
                 return True
+
         return False
 
     def _get_collision_names(self, whitelist=True):

@@ -2,7 +2,7 @@ import numpy as np
 import rospy
 
 from sawyer.garage.baselines.linear_feature_baseline import LinearFeatureBaseline
-from sawyer.ros.envs.sawyer.pick_and_place_env import PickAndPlaceEnv
+from sawyer.ros.envs.sawyer import PickAndPlaceEnv
 from sawyer.garage.misc.instrument import run_experiment
 from sawyer.garage.theano.algos import TRPO
 from sawyer.garage.theano.envs import TheanoEnv

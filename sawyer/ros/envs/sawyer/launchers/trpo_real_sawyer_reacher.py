@@ -3,7 +3,7 @@
 import numpy as np
 import rospy
 
-from sawyer.garage.baselines import LinearFeatureBaseline
+from sawyer.garage.baselines.linear_feature_baseline import LinearFeatureBaseline
 from sawyer.ros.envs.sawyer import ReacherEnv
 from sawyer.garage.misc.instrument import run_experiment
 from sawyer.garage.theano.algos import TRPO
