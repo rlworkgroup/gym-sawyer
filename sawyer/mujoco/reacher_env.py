@@ -24,17 +24,24 @@ class ReacherEnv(SawyerEnv):
                 gripper_pos=start_position,
                 gripper_state=1,
                 object_grasped=False,
-                object_pos=goal_position)
+                object_pos=goal_position,
+                joint_pos=None)
             goal = Configuration(
                 gripper_pos=goal_position,
                 gripper_state=1,
                 object_grasped=False,
-                object_pos=goal_position)
+                object_pos=goal_position,
+                joint_pos=None)
 
             return start, goal
 
+        data_ctrl = np.array([0, 0, -0.140923828125, -1.2789248046875, -3.043166015625,
+                    -2.139623046875, -0.047607421875, -0.7052822265625, -1.4102060546875,])
+
         SawyerEnv.__init__(self,
-                           start_goal_config=generate_start_goal, file_path='reacher.xml',
+                           start_goal_config=generate_start_goal, 
+                           file_path='reacher.xml',
+                           data_ctrl=data_ctrl,
                            **kwargs)
 
     def get_obs(self):

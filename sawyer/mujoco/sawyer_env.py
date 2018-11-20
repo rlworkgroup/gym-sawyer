@@ -41,38 +41,39 @@ COLLISION_WHITELIST = [
     ("r_gripper_l_finger_tip", "r_gripper_r_finger_tip"),
     ("r_gripper_l_finger_tip", "r_gripper_r_finger"),
     ("r_gripper_r_finger_tip", "r_gripper_l_finger"),
-    ("task_marker", "right_l0"),
-    ("task_marker", "right_l1"),
-    ("task_marker", "right_l1_2"),
-    ("task_marker", "right_l2"),
-    ("task_marker", "right_l2_2"),
-    ("task_marker", "right_l3"),
-    ("task_marker", "right_l4"),
-    ('task_marker', 'right_l4_2'),
-    ("task_marker", "right_l5"),
-    ("task_marker", "right_l6"),
-    ("task_marker", "right_gripper_base"),
-    ("task_marker", "right_hand"),
-    ("task_marker", "r_gripper_r_finger"),
-    ("task_marker", "r_gripper_r_finger_tip"),
-    ("task_marker", "r_gripper_l_finger"),
-    ("task_marker", "r_gripper_l_finger_tip"),
-    ("object0", "right_l0"),
-    ("object0", "right_l1"),
-    ("object0", "right_l1_2"),
-    ("object0", "right_l2"),
-    ("object0", "right_l2_2"),
-    ("object0", "right_l3"),
-    ("object0", "right_l4"),
-    ("object0", "right_l4_2"),
-    ("object0", "right_l5"),
-    ("object0", "right_l6"),
-    ("object0", "right_gripper_base"),
-    ("object0", "right_hand"),
-    ("object0", "r_gripper_r_finger"),
-    ("object0", "r_gripper_r_finger_tip"),
-    ("object0", "r_gripper_l_finger"),
-    ("object0", "r_gripper_l_finger_tip"),
+    
+    # ("task_marker", "right_l0"),
+    # ("task_marker", "right_l1"),
+    # ("task_marker", "right_l1_2"),
+    # ("task_marker", "right_l2"),
+    # ("task_marker", "right_l2_2"),
+    # ("task_marker", "right_l3"),
+    # ("task_marker", "right_l4"),
+    # ('task_marker', 'right_l4_2'),
+    # ("task_marker", "right_l5"),
+    # ("task_marker", "right_l6"),
+    # ("task_marker", "right_gripper_base"),
+    # ("task_marker", "right_hand"),
+    # ("task_marker", "r_gripper_r_finger"),
+    # ("task_marker", "r_gripper_r_finger_tip"),
+    # ("task_marker", "r_gripper_l_finger"),
+    # ("task_marker", "r_gripper_l_finger_tip"),    
+    # ("object0", "right_l0"),
+    # ("object0", "right_l1"),
+    # ("object0", "right_l1_2"),
+    # ("object0", "right_l2"),
+    # ("object0", "right_l2_2"),
+    # ("object0", "right_l3"),
+    # ("object0", "right_l4"),
+    # ("object0", "right_l4_2"),
+    # ("object0", "right_l5"),
+    # ("object0", "right_l6"),
+    # ("object0", "right_gripper_base"),
+    # ("object0", "right_hand"),
+    # ("object0", "r_gripper_r_finger"),
+    # ("object0", "r_gripper_r_finger_tip"),
+    # ("object0", "r_gripper_l_finger"),
+    # ("object0", "r_gripper_l_finger_tip"),
     ("mocap", "right_l0"),
     ("mocap", "right_l1"),
     ("mocap", "right_l1_2"),
@@ -89,38 +90,38 @@ COLLISION_WHITELIST = [
     ("mocap", "r_gripper_r_finger_tip"),
     ("mocap", "r_gripper_l_finger"),
     ("mocap", "r_gripper_l_finger_tip"),
-    ("achieved_goal", "right_l0"),
-    ("achieved_goal", "right_l1"),
-    ("achieved_goal", "right_l1_2"),
-    ("achieved_goal", "right_l2"),
-    ("achieved_goal", "right_l2_2"),
-    ("achieved_goal", "right_l3"),
-    ("achieved_goal", "right_l4"),
-    ("achieved_goal", "right_l4_2"),
-    ("achieved_goal", "right_l5"),
-    ("achieved_goal", "right_l6"),
-    ("achieved_goal", "right_gripper_base"),
-    ("achieved_goal", "right_hand"),
-    ("achieved_goal", "r_gripper_r_finger"),
-    ("achieved_goal", "r_gripper_r_finger_tip"),
-    ("achieved_goal", "r_gripper_l_finger"),
-    ("achieved_goal", "r_gripper_l_finger_tip"),
-    ("desired_goal", "right_l0"),
-    ("desired_goal", "right_l1"),
-    ("desired_goal", "right_l1_2"),
-    ("desired_goal", "right_l2"),
-    ("desired_goal", "right_l2_2"),
-    ("desired_goal", "right_l3"),
-    ("desired_goal", "right_l4"),
-    ("desired_goal", "right_l4_2"),
-    ("desired_goal", "right_l5"),
-    ("desired_goal", "right_l6"),
-    ("desired_goal", "right_gripper_base"),
-    ("desired_goal", "right_hand"),
-    ("desired_goal", "r_gripper_r_finger"),
-    ("desired_goal", "r_gripper_r_finger_tip"),
-    ("desired_goal", "r_gripper_l_finger"),
-    ("desired_goal", "r_gripper_l_finger_tip"),
+    # ("achieved_goal", "right_l0"),
+    # ("achieved_goal", "right_l1"),
+    # ("achieved_goal", "right_l1_2"),
+    # ("achieved_goal", "right_l2"),
+    # ("achieved_goal", "right_l2_2"),
+    # ("achieved_goal", "right_l3"),
+    # ("achieved_goal", "right_l4"),
+    # ("achieved_goal", "right_l4_2"),
+    # ("achieved_goal", "right_l5"),
+    # ("achieved_goal", "right_l6"),
+    # ("achieved_goal", "right_gripper_base"),
+    # ("achieved_goal", "right_hand"),
+    # ("achieved_goal", "r_gripper_r_finger"),
+    # ("achieved_goal", "r_gripper_r_finger_tip"),
+    # ("achieved_goal", "r_gripper_l_finger"),
+    # ("achieved_goal", "r_gripper_l_finger_tip"),
+    # ("desired_goal", "right_l0"),
+    # ("desired_goal", "right_l1"),
+    # ("desired_goal", "right_l1_2"),
+    # ("desired_goal", "right_l2"),
+    # ("desired_goal", "right_l2_2"),
+    # ("desired_goal", "right_l3"),
+    # ("desired_goal", "right_l4"),
+    # ("desired_goal", "right_l4_2"),
+    # ("desired_goal", "right_l5"),
+    # ("desired_goal", "right_l6"),
+    # ("desired_goal", "right_gripper_base"),
+    # ("desired_goal", "right_hand"),
+    # ("desired_goal", "r_gripper_r_finger"),
+    # ("desired_goal", "r_gripper_r_finger_tip"),
+    # ("desired_goal", "r_gripper_l_finger"),
+    # ("desired_goal", "r_gripper_l_finger_tip"),
 ]
 
 Configuration = namedtuple("Configuration", [
@@ -174,6 +175,7 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
                  file_path='pick_and_place.xml',
                  free_object=True,
                  obj_in_env=False,
+                 data_ctrl=np.array([0, 0]),
                  *args,
                  **kwargs):
         """
@@ -212,6 +214,7 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
         self._collision_penalty = collision_penalty
         self._free_object = free_object
         self._obj_in_env = obj_in_env
+        self._data_ctrl = data_ctrl 
         file_path = osp.join(MODEL_DIR, file_path)
         MujocoEnv.__init__(self, file_path=file_path)
 
@@ -245,7 +248,8 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
 
     def render(self, mode="human"):
         viewer = self.get_viewer()
-        viewer.add_marker(pos=np.array(self._desired_goal), label="goal", size=0.01 * np.ones(3),)
+        if self._desired_goal is not None:
+            viewer.add_marker(pos=np.array(self._desired_goal), label="goal", size=0.01 * np.ones(3),)
         super(SawyerEnv, self).render(mode=mode)
 
     @property
@@ -343,7 +347,7 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
                 dtype=np.float32)
         elif self._control_method == 'position_control':
             return Box(
-                low=np.full(7, -0.04), high=np.full(7, 0.04), dtype=np.float32)
+                low=np.full(9, -0.04), high=np.full(9, 0.04), dtype=np.float32)
         else:
             raise NotImplementedError
 
@@ -547,8 +551,7 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
                     self.sim.step()
                 attempts += 1
         else:
-            self.sim.data.ctrl[:] = np.array([0, 0, -0.140923828125, -1.2789248046875, -3.043166015625,
-                    -2.139623046875, -0.047607421875, -0.7052822265625, -1.4102060546875,])        
+            self.sim.data.ctrl[:] = self._data_ctrl        
             self.sim.forward()
             for _ in range(100):
                 self.sim.step()

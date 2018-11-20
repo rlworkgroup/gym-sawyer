@@ -4,9 +4,9 @@ from gym.spaces import Box
 from gym.envs.robotics.utils import reset_mocap2body_xpos
 
 from garage.core.serializable import Serializable
-from garage.envs.mujoco.sawyer.sawyer_env import Configuration
-from garage.envs.mujoco.sawyer.sawyer_env import SawyerEnv
-from garage.envs.mujoco.sawyer.sawyer_env import SawyerEnvWrapper
+from sawyer.mujoco.sawyer_env import Configuration
+from sawyer.mujoco.sawyer_env import SawyerEnv
+from sawyer.mujoco.sawyer_env import SawyerEnvWrapper
 from garage.misc.overrides import overrides
 from gym.envs.robotics import rotations
 
@@ -124,7 +124,7 @@ COLLISION_WHITELIST = [
 ]
 
 
-class PushEnv(SawyerEnv):
+class PusherEnv(SawyerEnv):
     def __init__(self,
                  delta=np.array([0.15, 0, 0]),
                  easy_gripper_init=True,
@@ -134,7 +134,6 @@ class PushEnv(SawyerEnv):
         self._already_successful = False
 
         def start_goal_config():
-            # center = self.sim.data.get_geom_xpos('target2')
             if randomize_start_pos:
                 initial_block_pos = np.array([
                     np.random.uniform(0.6, 0.8),
@@ -143,19 +142,7 @@ class PushEnv(SawyerEnv):
                 ])
             else:
                 initial_block_pos = np.array([0.64, 0.22, 0.065])
-            # d = 0.15
-            # delta = np.array({
-            #     "up": (d, 0),
-            #     "down": (-d, 0),
-            #     "left": (0, d),
-            #     "right": (0, -d)
-            # }[direction])
-            # if easy_gripper_init:
-            #     # position gripper besides the block
-            #     gripper_pos = np.concatenate([initial_block_pos - delta, [0.07]])
-            # else:
-            #     # position gripper above the block
-            #     gripper_pos = np.concatenate([initial_block_pos, [0.2]])
+
             if control_method == 'task_space_control':
                 start = Configuration(
                     gripper_pos=initial_block_pos + np.array([0, 0, 0.3]),
@@ -171,47 +158,7 @@ class PushEnv(SawyerEnv):
                     joint_pos=None)
             else:
                 if easy_gripper_init:
-                    # jpos = np.array([
-                    #     0.02631256,  0.57778916,  0.1339495, -2.16678053,
-                    #     -1.77062755, 3.03287272, -3.22155594
-                    # ])
-                    # jpos = np.array([-0.7318902, -1.06648196, 0.92428461, 1.78847105, -0.43512962, 1.08968813,
-                    #         -1.05157125])
- #                    jpos = np.array([-0.83591221, -1.05890433, 0.91351439, 1.75259073, -0.43152266, 1.11151082,
- # -1.1771668])
- #                    jpos = np.array([0, -1.1, 0, 1.3, 0, 1.4, 1.65])
                     jpos = np.array([-0.4839443359375, -0.991173828125, -2.3821015625, -1.9510517578125, -0.5477119140625, -0.816458984375, -0.816326171875])
-                    # jpos = np.array({
-                    #     "up": [
-                    #         -0.68198394, -0.96920825, 0.76964638, 2.00488611,
-                    #         -0.56956307, 0.76115281, -0.97169329
-                    #     ],
-                    #      "up": [-0.64455559, -3.0961024,   0.91690344,  4.31425867, -0.57141069,  0.62862147,
-                    #     -0.69098976],
-                    #     "up": [
-                    #         -0.140923828125, -1.2789248046875, -3.043166015625,
-                    #         -2.139623046875, -0.047607421875, -0.7052822265625,
-                    #         -1.4102060546875
-                    #     ],
-                    #     "down": [
-                    #         -0.12526904, 0.29675812, 0.06034621, -0.55948609,
-                    #         -0.03694355, 1.8277617, -1.54921871
-                    #     ],
-                    #     "down": [
-                    #         -0.140923828125, -1.2789248046875, -3.043166015625,
-                    #         -2.139623046875, -0.047607421875, -0.7052822265625,
-                    #         -1.4102060546875
-                    #     ],
-                    #     "left": [
-                    #         -0.36766702, 0.62033507, 0.00376033, -1.33212273,
-                    #         0.06092402, 2.29230268, -1.7248123
-                    #     ],
-                    #     "right": [
-                    #         5.97299145e-03, 6.46604393e-01, 1.40055632e-03,
-                    #         -1.22810430e+00, 9.04236294e-03, 2.13193649e+00,
-                    #         -1.38572576e+00
-                    #     ]
-                    # }[direction])
                 else:
                     jpos = np.array([
                         -0.35807692, 0.6890401, -0.21887338, -1.4569705,
@@ -251,13 +198,17 @@ class PushEnv(SawyerEnv):
         self.cp3 = np.array([width / 2, length / 2, 0])
         self.cp4 = np.array([width / 2, - length / 2, 0])
 
-        super(PushEnv, self).__init__(
+        data_ctrl = np.array([0, 0])
+
+        super(PusherEnv, self).__init__(
             start_goal_config=start_goal_config,
             achieved_goal_fn=achieved_goal_fn,
             desired_goal_fn=desired_goal_fn,
             file_path="push.xml",
             collision_whitelist=COLLISION_WHITELIST,
             control_method=control_method,
+            data_ctrl=data_ctrl,
+            obj_in_env=True,
             **kwargs)
         self._easy_gripper_init = easy_gripper_init
 
@@ -270,13 +221,10 @@ class PushEnv(SawyerEnv):
         object_ori = self.object_orientation
         grasped = self.has_object
         if self._control_method == 'position_control':
-            # obs = np.concatenate((self.joint_positions, object_pos, object_ori,
-            #                       gripper_pos))
-            # relative difference
             initial_jpos = np.array(
                 [-0.4839443359375, -0.991173828125, -2.3821015625, -1.9510517578125, -0.5477119140625, -0.816458984375,
                  -0.816326171875])
-            obs = np.concatenate((self.joint_positions - initial_jpos, gripper_pos - object_pos, object_ori-np.array([1., 0., 0., 0.])))
+            obs = np.concatenate((self.joint_positions[2:] - initial_jpos, gripper_pos - object_pos, object_ori-np.array([1., 0., 0., 0.])))
         else:
             obs = np.concatenate([gripper_pos, object_pos, object_ori])
 
@@ -310,7 +258,7 @@ class PushEnv(SawyerEnv):
                 dtype=np.float32)
         elif self._control_method == 'position_control':
             return Box(
-                low=np.full(7, -0.04), high=np.full(7, 0.04), dtype=np.float32)
+                low=np.full(9, -0.04), high=np.full(9, 0.04), dtype=np.float32)
         else:
             raise NotImplementedError
 
@@ -327,15 +275,13 @@ class PushEnv(SawyerEnv):
             self.sim.forward()
         elif self._control_method == "task_space_control":
             reset_mocap2body_xpos(self.sim)
-            self.sim.data.mocap_pos[0, :
-                                    3] = self.sim.data.mocap_pos[0, :3] + a[:3]
+            self.sim.data.mocap_pos[0, :3] = self.sim.data.mocap_pos[0, :3] + a[:3]
             self.sim.data.mocap_quat[:] = np.array([0, 1, 0, 0])
-            # self.set_gripper_state(a[3])
             self.sim.forward()
             for _ in range(1):
                 self.sim.step()
         elif self._control_method == "position_control":
-            curr_pos = self.joint_positions
+            curr_pos = np.concatenate((np.array([0.0, 0.0]), self.joint_positions[2:]))
             next_pos = np.clip(a + curr_pos, self.joint_position_space.low,
                                self.joint_position_space.high)
             old_block_pos = self.object_position
@@ -385,9 +331,6 @@ class PushEnv(SawyerEnv):
         else:
             raise NotImplementedError
 
-        # force object's velocity to 0
-        # self.sim.data.set_joint_qvel('object0:joint', np.zeros(6))
-        # self.sim.data.qacc[:6] = 0
         self._step += 1
 
         obs = self.get_obs()
@@ -422,20 +365,10 @@ class PushEnv(SawyerEnv):
         gripper_rot = rotations.mat2quat(self.sim.data.get_site_xmat('grip'))
         r3 = -np.linalg.norm(upright_gripper - gripper_rot) / 10 * 2/3
 
-        # if r2 / r1 > self._test_ration:
-        #     self._test_ration = r2 / r1
-        #     print(self._test_ration)
-
         end_position = self.object_position + np.array([0, 0, 0.15])
         if self._already_successful:
             r2 = -np.linalg.norm(self.finger_position - end_position) / 5 * 2/3
         r = r1 + r2 + r3 + r4
-
-        # if self._easy_gripper_init:
-        #     # encourage gripper to move close to block
-        #     r += 0.02 - np.linalg.norm(self.gripper_position -
-        #                                self.object_position)
-
         self._is_success = self._success_fn(self, self._achieved_goal,
                                             self._desired_goal, info)
         done = False
@@ -459,10 +392,8 @@ class PushEnv(SawyerEnv):
     @overrides
     def reset(self):
         self._already_successful = False
-
-        return super(PushEnv, self).reset()
-
         self.previous_joint_positions = self.joint_positions
+        return super(PusherEnv, self).reset()
 
     def in_xyregion(self, gripper_pos, block_pos, block_ori):
         p = np.array([gripper_pos[0], gripper_pos[1], 0])
@@ -512,4 +443,4 @@ class SimplePushEnv(SawyerEnvWrapper, Serializable):
         Serializable.quick_init(self, locals())
         self.reward_range = None
         self.metadata = None
-        super().__init__(PushEnv(*args, **kwargs))
+        super().__init__(PusherEnv(*args, **kwargs))
