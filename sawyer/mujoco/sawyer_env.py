@@ -375,8 +375,7 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
             self.sim.forward()
         elif self._control_method == "task_space_control":
             reset_mocap2body_xpos(self.sim)
-            self.sim.data.mocap_pos[0, :
-                                    3] = self.sim.data.mocap_pos[0, :3] + a[:3]
+            self.sim.data.mocap_pos[0, :3] = self.sim.data.mocap_pos[0, :3] + a[:3]
             self.sim.data.mocap_quat[:] = np.array([0, 1, 0, 0])
             self.set_gripper_state(a[3])
             for _ in range(5):
@@ -384,19 +383,16 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
             self.sim.forward()
         elif self._control_method == "position_control":
             curr_pos = self.joint_positions
-            next_pos = np.clip(a + curr_pos, self.joint_position_space.low,
-                               self.joint_position_space.high)
-            self.joint_positions = next_pos
-            self.sim.forward()
 
-            # Verify the execution of the action.
-            # for i in range(7):
-            #     curr_pos = self.joint_positions
-            #     d = np.absolute(curr_pos[i] - next_pos[i])
-            #     assert d < 1e-5, \
-            #     "Joint right_j{} failed to reached the desired qpos.\nError: {}\t Desired: {}\t Current: {}"\
-            #     .format(i, d, next_pos[i], curr_pos)
-
+            next_pos = np.clip(
+                a + curr_pos[:],
+                self.joint_position_space.low[:],
+                self.joint_position_space.high[:]
+            )
+            for _ in range(4):
+                self.sim.data.ctrl[:] = next_pos
+                self.sim.forward()
+                self.sim.step()
         else:
             raise NotImplementedError
         self._step += 1
@@ -406,8 +402,6 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
         # collision checking is expensive so cache the value
         in_collision = self.in_collision
 
-        self._achieved_goal = obs.get('achieved_goal')
-        self._desired_goal = obs.get('desired_goal')
         info = {
             "l": self._step,
             "grasped": obs["has_object"],
@@ -419,19 +413,16 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
         }
 
         r = self.compute_reward(
-            achieved_goal=obs.get('achieved_goal'),
-            desired_goal=obs.get('desired_goal'),
+            achieved_goal=self._achieved_goal,
+            desired_goal=self._desired_goal,
             info=info)
 
         self._is_success = self._success_fn(self, self._achieved_goal,
                                             self._desired_goal, info)
         done = False
 
-        # control cost
-        r -= self._control_cost_coeff * np.linalg.norm(a)
-
         # collision detection
-        if self.in_collision:
+        if in_collision:
             r -= self._collision_penalty
             if self._terminate_on_collision:
                 done = True
