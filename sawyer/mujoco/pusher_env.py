@@ -198,8 +198,6 @@ class PusherEnv(SawyerEnv):
         self.cp3 = np.array([width / 2, length / 2, 0])
         self.cp4 = np.array([width / 2, - length / 2, 0])
 
-        data_ctrl = np.array([0, 0])
-
         super(PusherEnv, self).__init__(
             start_goal_config=start_goal_config,
             achieved_goal_fn=achieved_goal_fn,
@@ -207,7 +205,6 @@ class PusherEnv(SawyerEnv):
             file_path="push.xml",
             collision_whitelist=COLLISION_WHITELIST,
             control_method=control_method,
-            data_ctrl=data_ctrl,
             obj_in_env=True,
             **kwargs)
         self._easy_gripper_init = easy_gripper_init
@@ -218,18 +215,18 @@ class PusherEnv(SawyerEnv):
         grip_velp = self.sim.data.get_site_xvelp('grip') * dt
 
         object_pos = self.object_position
-        object_ori = self.object_orientation
+        # object_ori = self.object_orientation
         grasped = self.has_object
         if self._control_method == 'position_control':
             initial_jpos = np.array(
                 [-0.4839443359375, -0.991173828125, -2.3821015625, -1.9510517578125, -0.5477119140625, -0.816458984375,
                  -0.816326171875])
-            obs = np.concatenate((self.joint_positions[2:] - initial_jpos, gripper_pos - object_pos, object_ori-np.array([1., 0., 0., 0.])))
+            obs = np.concatenate((self.joint_positions[2:] - initial_jpos, gripper_pos - object_pos))
         else:
-            obs = np.concatenate([gripper_pos, object_pos, object_ori])
+            obs = np.concatenate([gripper_pos, object_pos])
 
-        achieved_goal = self._achieved_goal_fn(self)
-        desired_goal = self._desired_goal_fn(self)
+        achieved_goal = self._achieved_goal_fn()
+        desired_goal = self._desired_goal_fn()
 
         achieved_goal_qpos = np.concatenate((achieved_goal, [1, 0, 0, 0]))
         self.sim.data.set_joint_qpos('achieved_goal:joint', achieved_goal_qpos)
@@ -270,17 +267,17 @@ class PusherEnv(SawyerEnv):
         a *= self._action_scale
         a = np.clip(a, self.action_space.low, self.action_space.high)
 
-        if self._control_method == "torque_control":
-            self.forward_dynamics(a)
-            self.sim.forward()
-        elif self._control_method == "task_space_control":
-            reset_mocap2body_xpos(self.sim)
-            self.sim.data.mocap_pos[0, :3] = self.sim.data.mocap_pos[0, :3] + a[:3]
-            self.sim.data.mocap_quat[:] = np.array([0, 1, 0, 0])
-            self.sim.forward()
-            for _ in range(1):
-                self.sim.step()
-        elif self._control_method == "position_control":
+        # if self._control_method == "torque_control":
+        #     self.forward_dynamics(a)
+        #     self.sim.forward()
+        # elif self._control_method == "task_space_control":
+        #     reset_mocap2body_xpos(self.sim)
+        #     self.sim.data.mocap_pos[0, :3] = self.sim.data.mocap_pos[0, :3] + a[:3]
+        #     self.sim.data.mocap_quat[:] = np.array([0, 1, 0, 0])
+        #     self.sim.forward()
+        #     for _ in range(1):
+        #         self.sim.step()
+        if self._control_method == "position_control":
             curr_pos = np.concatenate((np.array([0.0, 0.0]), self.joint_positions[2:]))
             next_pos = np.clip(a + curr_pos, self.joint_position_space.low,
                                self.joint_position_space.high)
@@ -392,8 +389,38 @@ class PusherEnv(SawyerEnv):
     @overrides
     def reset(self):
         self._already_successful = False
+
+        super(PusherEnv, self).reset()
+
+        if self._start_configuration.object_grasped:
+            self.set_gripper_state(1)  # open
+            self.set_gripper_position(self._start_configuration.gripper_pos)
+            self.set_object_position(self._start_configuration.gripper_pos)
+            self.set_gripper_state(-1)  # close
+        else:
+            self.set_gripper_state(self._start_configuration.gripper_state)
+            self.set_gripper_position(self._start_configuration.gripper_pos)
+            self.set_object_position(self._start_configuration.object_pos)
+
+        if self._start_configuration.joint_pos is not None:
+            self.joint_positions = self._start_configuration.joint_pos
+            self.sim.forward()
+
+        attempts = 1
+        if self._randomize_start_jpos:
+            self.joint_positions = self.joint_position_space.sample()
+            self.sim.forward()
+            while hasattr(self, "_collision_whitelist") and self.in_collision:
+                if attempts > 1000:
+                    print("Gave up after 1000 attempts")
+
+                self.joint_positions = self.joint_position_space.sample()
+                self.sim.forward()
+                attempts += 1
+
         self.previous_joint_positions = self.joint_positions
-        return super(PusherEnv, self).reset()
+
+        return self.get_obs()
 
     def in_xyregion(self, gripper_pos, block_pos, block_ori):
         p = np.array([gripper_pos[0], gripper_pos[1], 0])

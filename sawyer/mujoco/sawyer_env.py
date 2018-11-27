@@ -162,7 +162,7 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
                  desired_goal_fn=default_desired_goal_fn,
                  max_episode_steps=50,
                  completion_bonus=10,
-                 distance_threshold=0.01,
+                 distance_threshold=0.05,
                  for_her=False,
                  control_cost_coeff=0.,
                  action_scale=1.0,
@@ -175,7 +175,6 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
                  file_path='pick_and_place.xml',
                  free_object=True,
                  obj_in_env=False,
-                 data_ctrl=np.array([0, 0]),
                  *args,
                  **kwargs):
         """
@@ -214,7 +213,6 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
         self._collision_penalty = collision_penalty
         self._free_object = free_object
         self._obj_in_env = obj_in_env
-        self._data_ctrl = data_ctrl 
         file_path = osp.join(MODEL_DIR, file_path)
         MujocoEnv.__init__(self, file_path=file_path)
 
@@ -528,26 +526,6 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
         if self._obj_in_env:
             self.set_object_position(self._start_configuration.object_pos)
         self.sim.forward()
-        attempts = 1
-        if self._randomize_start_jpos:
-            self.joint_positions = self.joint_position_space.sample()
-            self.sim.forward()
-            while hasattr(self, "_collision_whitelist") and self.in_collision:
-                if attempts > 1000:
-                    print("Gave up after 1000 attempts")
-
-                self.sim.data.ctrl[:] = self.joint_position_space.sample()
-                self.sim.forward()
-                for _ in range(100):
-                    self.sim.step()
-                attempts += 1
-        else:
-            self.sim.data.ctrl[:] = self._data_ctrl        
-            self.sim.forward()
-            for _ in range(100):
-                self.sim.step()
-
-        return self.get_obs()
 
 
 def ppo_info(info):

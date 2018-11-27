@@ -129,7 +129,7 @@ class PusherEnv(SawyerEnv, Serializable):
         limb_joint_positions = self._robot.limb_joint_positions
 
         blocks_position = self._world.get_blocks_position()
-        blocks_orientation = self._world.get_blocks_orientation()
+        # blocks_orientation = self._world.get_blocks_orientation()
 
         block_pos_obs = np.array([])
         for position in blocks_position:
@@ -137,11 +137,11 @@ class PusherEnv(SawyerEnv, Serializable):
                 (block_pos_obs, np.array([position.x, position.y,
                                           position.z])))
 
-        block_ori_obs = np.array([])
-        for orientation in blocks_orientation:
-            block_ori_obs = np.concatenate(
-                (block_ori_obs,
-                 np.array([orientation.w, orientation.x, orientation.y, orientation.z])))
+        # block_ori_obs = np.array([])
+        # for orientation in blocks_orientation:
+        #     block_ori_obs = np.concatenate(
+        #         (block_ori_obs,
+        #          np.array([orientation.w, orientation.x, orientation.y, orientation.z])))
 
         gripper_pos = self._robot.gripper_pose['position']
         print(gripper_pos)
@@ -153,7 +153,7 @@ class PusherEnv(SawyerEnv, Serializable):
 
         delta_limb_joint_positions = limb_joint_positions - initial_jpos
 
-        obs = np.concatenate((delta_limb_joint_positions, gripper_pos - block_pos_obs, np.array([0., 0., 0., 0.])))
+        obs = np.concatenate((delta_limb_joint_positions, gripper_pos - block_pos_obs))
         # print(obs)
 
         Observation = collections.namedtuple(
