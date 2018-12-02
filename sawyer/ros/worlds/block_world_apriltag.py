@@ -229,49 +229,51 @@ class BlockWorld(World):
             self._moveit_update_block(block)
 
     def _apriltag_update_block_state(self, data):
-        robot_frame = "/robot"
+        robot_frame = "robot"
 
-        for block in self._blocks:            
-            block_frame = block.resource
-            translation_wrt_robot, orientation_wrt_robot = self._tf_listener.lookupTransform(
-                block_frame, robot_frame, rospy.Time(0))
+        if self._tf_listener.frameExists(robot_frame):     
+            for block in self._blocks:                            
+                block_frame = block.resource
+                if self._tf_listener.frameExists(block_frame): 
+                    translation_wrt_robot, orientation_wrt_robot = self._tf_listener.lookupTransform(
+                        block_frame, robot_frame, rospy.Time(0))
 
-            translation_wrt_robot = Point(
-                x=translation_wrt_robot[0],
-                y=translation_wrt_robot[1],
-                z=translation_wrt_robot[2])
+                    translation_wrt_robot = Point(
+                        x=translation_wrt_robot[0],
+                        y=translation_wrt_robot[1],
+                        z=translation_wrt_robot[2])
 
-            orientation_wrt_robot = Quaternion(
-                x=orientation_wrt_robot[0],
-                y=orientation_wrt_robot[1],
-                z=orientation_wrt_robot[2],
-                w=orientation_wrt_robot[3])
-            
-            # Use low pass filter to smooth data.
-            if block.first_smoothed:
-                block.position = translation_wrt_robot
-                block.position.x -= 0.035
-                block.position.y += 0.035
-                block.position.z = 0.065
-                block.orientation = orientation_wrt_robot
-                block.first_smoothed = False
-            else:
-                block.position.x = self._lowpass_filter(
-                    translation_wrt_robot.x, block.position.x) - 0.035
-                block.position.y = self._lowpass_filter(
-                    translation_wrt_robot.y, block.position.y) + 0.035
-                # block.position.z = self._lowpass_filter(
-                #     translation_wrt_robot.z, block.position.z)
-                block.position.z = 0.065
-                block.orientation.x = self._lowpass_filter(
-                    orientation_wrt_robot.x, block.orientation.x)
-                block.orientation.y = self._lowpass_filter(
-                    orientation_wrt_robot.y, block.orientation.y)
-                block.orientation.z = self._lowpass_filter(
-                    orientation_wrt_robot.z, block.orientation.z)
-                block.orientation.w = self._lowpass_filter(
-                    orientation_wrt_robot.w, block.orientation.w)
-            self._moveit_update_block(block)
+                    orientation_wrt_robot = Quaternion(
+                        x=orientation_wrt_robot[0],
+                        y=orientation_wrt_robot[1],
+                        z=orientation_wrt_robot[2],
+                        w=orientation_wrt_robot[3])
+                    
+                    # Use low pass filter to smooth data.
+                    if block.first_smoothed:
+                        block.position = translation_wrt_robot
+                        block.position.x -= 0.035
+                        block.position.y += 0.035
+                        block.position.z = 0.065
+                        block.orientation = orientation_wrt_robot
+                        block.first_smoothed = False
+                    else:
+                        block.position.x = self._lowpass_filter(
+                            translation_wrt_robot.x, block.position.x) - 0.035
+                        block.position.y = self._lowpass_filter(
+                            translation_wrt_robot.y, block.position.y) + 0.035
+                        # block.position.z = self._lowpass_filter(
+                        #     translation_wrt_robot.z, block.position.z)
+                        block.position.z = 0.065
+                        block.orientation.x = self._lowpass_filter(
+                            orientation_wrt_robot.x, block.orientation.x)
+                        block.orientation.y = self._lowpass_filter(
+                            orientation_wrt_robot.y, block.orientation.y)
+                        block.orientation.z = self._lowpass_filter(
+                            orientation_wrt_robot.z, block.orientation.z)
+                        block.orientation.w = self._lowpass_filter(
+                            orientation_wrt_robot.w, block.orientation.w)
+                    self._moveit_update_block(block)
 
     def _lowpass_filter(self, observed_value_p1, estimated_value):
         estimated_value_p1 = estimated_value + self._lowpass_alpha * (
