@@ -3,6 +3,9 @@
 USER_UID=$(id -u)
 USER_GID=$(id -g)
 
+SAWYER_HOSTNAME="021707CP00056.local"
+SAWYER_IP="192.168.33.7"
+
 xhost +local:root
 
 if [ -z ${NVIDIA_DRIVER+x} ]; then
@@ -23,6 +26,8 @@ docker run \
 	--runtime=nvidia \
 	--init \
 	$DOCKER_VISUAL_NVIDIA \
+	--net="host" \
+	--add-host="${SAWYER_HOSTNAME}:${SAWYER_IP}" \
 	--env="DISPLAY" \
 	--env="QT_X11_NO_MITSHM=1" \
 	--cap-add SYS_ADMIN \
