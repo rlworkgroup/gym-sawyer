@@ -43,8 +43,6 @@ FROM tensorflow/tensorflow:1.8.0-gpu-py3
 MAINTAINER Hejia Zhang <hjzh578@gmail.com>
 MAINTAINER Utkarsh Patel <utkarshjp7@gmail.com>
 
-RUN ls .
-
 COPY --from=glvnd /usr/local/lib/x86_64-linux-gnu /usr/local/lib/x86_64-linux-gnu
 COPY --from=glvnd /usr/local/lib/i386-linux-gnu /usr/local/lib/i386-linux-gnu
 
@@ -225,7 +223,7 @@ ENV PYTHONPATH=$PYTHONPATH:/root/code/gym-sawyer
 
 RUN /root/code/gym-sawyer/sawyer/ros/docker/setup_ros_workspace.sh
 
-# ENTRYPOINT ["/root/code/gym-sawyer/sawyer/ros/docker/docker-entrypoint.sh"]
+ENTRYPOINT ["/root/code/gym-sawyer/sawyer/ros/docker/docker-entrypoint.sh"]
 
 
 
