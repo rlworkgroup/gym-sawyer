@@ -6,20 +6,19 @@ USER_GID=$(id -g)
 xhost +local:root
 
 DOCKER_VISUAL="-v /tmp/.X11-unix:/tmp/.X11-unix"
+SAWYER_HOSTNAME="021707CP00056.local"
+SAWYER_IP="192.168.33.7"
+
 
 docker run \
     -it \
     --rm \
     --init \
     $DOCKER_VISUAL \
-    --env="USER_UID=${USER_UID}" \
-    --env="USER_GID=${USER_GID}" \
-    --env="USER=${USER}" \
+    --net="host" \
+    --add-host="${SAWYER_HOSTNAME}:${SAWYER_IP}" \
     --env="DISPLAY" \
     --env="QT_X11_NO_MITSHM=1" \
-    --volume=/home/:/home/:rw \
-    --volume=/dev/bus/usb:/dev/bus/usb:ro \
-    --volume=/media:/media:rw \
     --cap-add SYS_ADMIN \
     --cap-add MKNOD \
     --device /dev/fuse \

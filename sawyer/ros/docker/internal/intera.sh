@@ -19,11 +19,11 @@ unset your_hostname
 # will be overwritten by any variables set here.
 
 # Specify Robot's hostname
-robot_hostname="robot_hostname.local"
+robot_hostname="021707CP00056.local"
 
 # Set *Either* your computers ip address or hostname. Please note if using
 # your_hostname that this must be resolvable to the Robot.
-your_ip="127.0.0.1"
+your_ip="192.168.33.8"
 #your_hostname="my_computer.local"
 
 # Specify ROS distribution (e.g. indigo, hydro, etc.)
@@ -53,8 +53,8 @@ if [ -n "${1}" ]; then
 			your_hostname="localhost"
 			your_ip=""
 		fi
-	else
-		robot_hostname="${1}"
+#	else
+#		robot_hostname="${1}"
 	fi
 fi
 
@@ -177,10 +177,16 @@ EOF
 
 if [ -n "${1}" ]; then 
 	if [[ "${1}" == "sim" ]]; then
-		${SHELL} --rcfile ${tf} -ci "${2}"
+		if [ -n "${2}" ]; then
+			${SHELL} --rcfile ${tf} -ci "${2}"
+		else
+			${SHELL} --rcfile ${tf}
+		fi
 	else
 		${SHELL} --rcfile ${tf} -ci "${1}"
 	fi
+else 
+	${SHELL} --rcfile ${tf}
 fi
 
 rm -f -- "${tf}"
