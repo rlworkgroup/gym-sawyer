@@ -4,22 +4,24 @@ from sensor_msgs.msg import JointState
 import numpy as np
 import pdb
 
-
-def trajectory_collector(num_trajectories):
+def trajectory_collector(num_trajectories, save_file='traj_data.npz'):
     def joint_cb(data):
-        if not do_collect:
-            return
+        try:
+            if not do_collect:
+                return
 
-        rospy.loginfo(rospy.get_caller_id() + ": Sawyer Joint States\n" + 
-            "[" + str(data.position) + "], " +
-            "[" + str(data.velocity) + "], " +
-            "[" + str(data.effort) + "]" )
+            rospy.loginfo(rospy.get_caller_id() + ": Sawyer Joint States\n" + 
+                "[" + str(data.position) + "], " +
+                "[" + str(data.velocity) + "], " +
+                "[" + str(data.effort) + "]" )
 
-        if len(data.name) == 9 and data.name[0] == 'head_pan':
-            traj_data['seq'].append(data.header.seq)
-            traj_data['secs'].append(data.header.stamp.secs)
-            traj_data['nsecs'].append(data.header.stamp.nsecs)
-            traj_data['pos'].append(list(data.position))
+            if len(data.name) == 9 and data.name[0] == 'head_pan':
+                traj_data['seq'].append(data.header.seq)
+                traj_data['secs'].append(data.header.stamp.secs)
+                traj_data['nsecs'].append(data.header.stamp.nsecs)
+                traj_data['pos'].append(list(data.position))
+        except:
+            pdb.set_trace()
     
 
     do_collect = False
@@ -29,9 +31,9 @@ def trajectory_collector(num_trajectories):
     rospy.init_node('listener', anonymous=True)
     rospy.Subscriber("/robot/joint_states", JointState, joint_cb)
 
-    while not rospy.is_shutdown() or i >= 5:
+    while not rospy.is_shutdown() and i < num_trajectories:
         # Prompt to start collecting task
-        print("Press any key to start collecting trajectory %d.\n" % (i+1) +
+        print("Press any key to start collecting trajectory %d.\n" % (i) +
               "Then any key to terminate trajectory collection.")
         raw_input()
 
@@ -50,16 +52,22 @@ def trajectory_collector(num_trajectories):
         for k,v in traj_data.items():
             traj_data[k] = np.array(v)
 
+        print("Trajectory %d collected. To end script, press 's'. To redo this trajectory, press 'r'. Press any other key to continue." % (i))
+        inchar = raw_input()
+        if inchar == 'r':
+            continue
+
         task_data.append(traj_data)
-        print("Trajectory %d collected. To stop collecting, press 's'. Press any other key to continue." % (i+1))
-        if raw_input() == 's':
+        i += 1
+        if inchar == 's':
             break
         
-        i += 1
     
-    print("Collected %d tasks" % (i+1))
-    np.savez('traj_data.npz', task_data=task_data)
+    print("Collected %d tasks, saved to %s" % (i, save_file))
+    np.savez(save_file, task_data=task_data)
 
 
 if __name__ == "__main__":
-    trajectory_collector(5)
+    num_trajectories = 10
+    print("Will collect %d trajectories" % (num_trajectories))
+    trajectory_collector(num_trajectories)
