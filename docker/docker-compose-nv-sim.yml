@@ -1,0 +1,27 @@
+version: '2.2'
+services:
+  nvidia:
+    build:
+      context: .
+      dockerfile: Dockerfile.nvidia
+    image: gym-sawyer/nvidia
+  nvidia-ros-intera:
+    build:
+      context: .
+      dockerfile: Dockerfile.ros_intera
+      args:
+        - PARENT_IMAGE=gym-sawyer/nvidia
+    image: gym-sawyer/nvidia-ros-intera
+  nvidia-ros-moveit:
+    build:
+      context: .
+      dockerfile: Dockerfile.moveit
+      args:
+        - PARENT_IMAGE=gym-sawyer/nvidia-ros-intera
+    image: gym-sawyer/nvidia-ros-moveit
+  nvidia-sawyer-sim:
+    build:
+      context: ./sawyer-sim
+      args:
+        - PARENT_IMAGE=gym-sawyer/nvidia-ros-moveit
+    image: gym-sawyer/nvidia-sawyer-sim
