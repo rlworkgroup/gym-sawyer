@@ -5,4 +5,4 @@ ROS_WS=/home/$USER/ros_ws
 docker cp "${1}" sawyer-ros-docker:/tmp;
 
 #Run the test script
-docker exec -it sawyer-ros-docker bash -c "cd $ROS_WS; $ROS_WS/intera.sh sim 'python3.6 /tmp/$(basename $1)'" > /dev/null
+docker exec -it sawyer-ros-docker bash -c "cd $ROS_WS; $ROS_WS/intera.sh 'python3.6 /tmp/$(basename $1)'" > /dev/null

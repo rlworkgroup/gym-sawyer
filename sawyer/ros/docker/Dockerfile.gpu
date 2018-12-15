@@ -214,6 +214,20 @@ RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y \
   rm -rf /var/lib/apt/lists/*
 
 
+#Install Pointgrey sdk
+RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y \
+  libunwind-dev \
+  ros-kinetic-cv-bridge \
+  ros-kinetic-image-transport && \
+  apt-get clean && \
+  rm -rf /var/lib/apt/lists/*
+
+WORKDIR /tmp
+RUN wget https://www.dropbox.com/s/wtymdt7os4isf17/spinnaker-1.13.0.31-amd64.tar.gz
+RUN tar -xf spinnaker-1.13.0.31-amd64.tar.gz
+WORKDIR /tmp/spinnaker-1.13.0.31-amd64
+RUN ./install_spinnaker.sh
+
 # Add code stub last
 RUN rm -rf /root/code/gym-sawyer
  
@@ -222,10 +236,4 @@ COPY . /root/code/gym-sawyer
 ENV PYTHONPATH=$PYTHONPATH:/root/code/gym-sawyer
 
 RUN /root/code/gym-sawyer/sawyer/ros/docker/setup_ros_workspace.sh
-
-ENTRYPOINT ["/root/code/gym-sawyer/sawyer/ros/docker/docker-entrypoint.sh"]
-
-
-
-
 
