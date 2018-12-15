@@ -1,10 +1,20 @@
-#!/bin/sh
-
-USER_UID=$(id -u)
-USER_GID=$(id -g)
+#!/bin/bash
 
 SAWYER_HOSTNAME="021707CP00056.local"
 SAWYER_IP="192.168.33.7"
+ENTRYPOINT_DIR="/root/code/gym-sawyer/sawyer/ros/docker/entrypoints"
+ENTRYPOINT="${ENTRYPOINT_DIR}/entrypoint-empty.sh"
+#ENTRYPOINT="/bin/bash"
+
+if [ -n "${1}" ]; then
+	if [[ "${1}" == "sim" ]]; then
+		ENTRYPOINT="${ENTRYPOINT_DIR}/entrypoint-sim.sh"
+	elif  [[ "${1}" == "april" ]]; then
+		ENTRYPOINT="${ENTRYPOINT_DIR}/entrypoint-robot-april.sh"
+	elif [[ "${1}" == "robot" ]]; then
+		ENTRYPOINT="${ENTRYPOINT_DIR}/entrypoint-robot.sh"
+	fi
+fi
 
 xhost +local:root
 
@@ -25,6 +35,7 @@ docker run \
 	--rm \
 	--runtime=nvidia \
 	--init \
+	--privileged \
 	$DOCKER_VISUAL_NVIDIA \
 	--net="host" \
 	--add-host="${SAWYER_HOSTNAME}:${SAWYER_IP}" \
@@ -32,9 +43,11 @@ docker run \
 	--env="QT_X11_NO_MITSHM=1" \
 	--cap-add SYS_ADMIN \
 	--cap-add MKNOD \
-	--device /dev/fuse \
+	--device /dev/fuse:/dev/video0 \
+	--volume=/dev/bus/usb:/dev/bus/usb:ro \
 	--name "sawyer-ros-docker" \
 	--security-opt apparmor:unconfined \
+	--entrypoint ${ENTRYPOINT} \
 sawyer-ros-docker:gpu bash;
 
 xhost -local:root

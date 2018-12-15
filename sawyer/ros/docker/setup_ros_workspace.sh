@@ -223,12 +223,33 @@ export CMAKE_PREFIX_PATH=/usr/local:$CMAKE_PREFIX_PATH
 rm /usr/lib/x86_64-linux-gnu/libboost_python.so
 ln -s /usr/lib/x86_64-linux-gnu/libboost_python-py35.so /usr/lib/x86_64-linux-gnu/libboost_python.so
 
-catkin_make -DPYTHON_EXECUTABLE:FILEPATH=$PYTHON -DCATKIN_BLACKLIST_PACKAGES='moveit_setup_assistant'
+# Install Apriltag SDK
+cd $ROS_WS/src
+git clone https://github.com/dmalyuta/apriltags2_ros
+
+# Install Pointgrey SDK
+git clone https://github.com/neufieldrobotics/spinnaker_sdk_camera_driver
 
 # Copy the sawyer simulation launch file and simulation world file
 cp $SAWYER_CODE_ROOT/sawyer/ros/envs/sawyer/sawyer_learning.launch $ROS_WS/src/sawyer_simulator/sawyer_gazebo/launch
 cp $SAWYER_CODE_ROOT/sawyer/ros/envs/sawyer/sawyer_world_learning.launch $ROS_WS/src/sawyer_simulator/sawyer_gazebo/launch
 cp $SAWYER_CODE_ROOT/sawyer/ros/envs/sawyer/sawyer_learning.world $ROS_WS/src/sawyer_simulator/sawyer_gazebo/worlds/
+
+# Copy apriltag launch file and config file
+cp $SAWYER_CODE_ROOT/sawyer/ros/docker/internal/block_detection.launch $ROS_WS/src/apriltags2_ros/apriltags2_ros/launch/
+cp $SAWYER_CODE_ROOT/sawyer/ros/docker/internal/tags.yaml $ROS_WS/src/apriltags2_ros/apriltags2_ros/config/
+
+# Copy pointgrey launch file and config file
+cp $SAWYER_CODE_ROOT/sawyer/ros/docker/internal/test_params.yaml $ROS_WS/src/spinnaker_sdk_camera_driver/params
+cp $SAWYER_CODE_ROOT/sawyer/ros/docker/internal/acquisition.launch $ROS_WS/src/spinnaker_sdk_camera_driver/launch
+
+# Copy patch files to enable camera_info topic for spinnaker sdk
+cp $SAWYER_CODE_ROOT/sawyer/ros/docker/internal/capture.cpp $ROS_WS/src/spinnaker_sdk_camera_driver/src
+cp $SAWYER_CODE_ROOT/sawyer/ros/docker/internal/capture.h $ROS_WS/src/spinnaker_sdk_camera_driver/include
+
+cd $ROS_WS
+catkin_make --pkg spinnaker_sdk_camera_driver
+catkin_make -DPYTHON_EXECUTABLE:FILEPATH=$PYTHON -DCATKIN_BLACKLIST_PACKAGES='moveit_setup_assistant'
 
 if [ -f /opt/ros/kinetic/lib/python2.7/dist-packages/cv2.so ] ; then
   rm /opt/ros/kinetic/lib/python2.7/dist-packages/cv2.so
