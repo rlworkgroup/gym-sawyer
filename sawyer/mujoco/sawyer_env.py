@@ -273,7 +273,6 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
         # Clip to action space
         a *= self._action_scale
         a = np.clip(a, self.action_space.low, self.action_space.high)
-
         if self._control_method == "torque_control":
             self.forward_dynamics(a)
             self.sim.forward()
@@ -286,16 +285,16 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
                 self.sim.step()
             self.sim.forward()
         elif self._control_method == "position_control":
-            curr_pos = self.joint_positions
+            curr_pos = self.joint_positions.copy()
 
             next_pos = np.clip(
                 a + curr_pos[:],
                 self.joint_position_space.low[:],
                 self.joint_position_space.high[:]
             )
-            for _ in range(4):
-                self.sim.data.ctrl[:] = next_pos
-                self.sim.forward()
+            self.sim.data.ctrl[:] = next_pos[:]
+            self.sim.forward()
+            for _ in range(5):
                 self.sim.step()
         else:
             raise NotImplementedError
