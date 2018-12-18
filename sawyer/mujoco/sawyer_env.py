@@ -296,11 +296,6 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
             self.sim.forward()
             for _ in range(5):
                 self.sim.step()
-            print('-----------')
-            print(curr_pos)
-            print(self.joint_positions.copy())
-            print(next_pos)
-            print(self.joint_positions.copy() - next_pos)
         else:
             raise NotImplementedError
         self._step += 1
