@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<launch>
+    
+    <include file="$(find sawyer_gazebo)/launch/sawyer_world.launch">
+        <arg name="electric_gripper" value="true" />
+    </include>
+
+    <node name="enable_robot" pkg="intera_interface" type="enable_robot.py" args="-e" output="screen" />
+    
+    <node name="joint_trajectory_action_server" pkg="intera_interface" type="joint_trajectory_action_server.py" output="screen" />
+    
+    <include file="$(find sawyer_moveit_config)/launch/sawyer_moveit.launch">
+        <arg name="electric_gripper" value="true" />
+    </include>
+
+</launch>
+

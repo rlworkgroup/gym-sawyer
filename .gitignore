@@ -26,7 +26,8 @@ wheels/
 MANIFEST
 
 # Vendor dependencies
-docker/intera_sim.sh
+docker/sawyer-sim/intera.sh
+docker/sawyer-robot/intera.sh
 
 # PyInstaller
 #  Usually these files are written by a python script from a template

@@ -7,7 +7,7 @@ This repository is under development, so all code is still experimental.
 
 ## Docker containers
 
-### Simulate Sawyer
+### Sawyer Simulation
 
 We use Gazebo to simulate Sawyer, so a dedicated GPU is required
 ([see System Requirements](http://gazebosim.org/tutorials?tut=guided_b1&cat=)).
@@ -40,26 +40,22 @@ container for the simulated Sawyer in the ROS environment using an NVIDIA GPU.
   ```
 3. Gazebo and MoveIt! should open with Sawyer in them
 
-4. To exit the container, type `exit` in the container shell
+4. To exit the container, type `sudo docker stop sawyer-sim` in a new terminal.
 
 ##### Control Sim Sawyer
 
-1. Open a new terminal and find the NAME property of the container with:
+1. Open a new terminal in the container by running:
   ```
-  $ docker container ps
+  $ docker exec -it sawyer-sim bash
   ```
-2. Let's open a new terminal in the container by running:
-  ```
-  $ docker exec -it <container_name> bash
-  ```
-3. Once inside the terminal, run the following commands to execute a keyboard
+2. Once inside the terminal, run the following commands to execute a keyboard
   controller:
   ```
   $ cd ~/ros_ws
   $ ./intera.sh sim
   $ rosrun intera_examples joint_position_keyboard.py
   ```
-4. The following message should appear:
+3. The following message should appear:
   ```
   Initializing node...
   Getting robot state...
@@ -67,12 +63,44 @@ container for the simulated Sawyer in the ROS environment using an NVIDIA GPU.
   [INFO] [1544554222.729527, 33.527000]: Robot Enabled
   Controlling joints. Press ? for help, Esc to quit.
   ```
-5. Type ? to get the keys that control sawyer.
+4. Type ? to get the keys that control sawyer.
 
 ##### View the header camera in Sim Sawyer
 
-1. Perform the first two steps from the previous section
+1. Perform the first step from the previous section
 2. Once in the container shell, run the following command:
   ```
   rosrun image_view image_view image:=/io/internal_camera/head_camera/image_raw
   ```
+  
+ ### Sawyer Robot  
+A dedicated GPU is recommended for rviz and other visualization tools. Currently only NVIDIA GPUs are supported.
+
+#### NVIDIA GPU
+
+This section contains instructions to build the docker image and run the docker
+container for the Sawyer robot in the ROS environment using an NVIDIA GPU.
+
+##### Prerequisites
+
+- Same as sawyer simulation.
+
+##### Instructions
+
+1. Export sawyer hostname, sawyer ip address, and workstation ip address.
+  ```
+  $ export SAWYER_HOSTNAME=__sawyerhostname__  
+  $ export SAWYER_IP=__sawyerip__ 
+  $ export WORKSTATION_IP=__workip__ 
+  ```
+2. In the root folder of your cloned repository build the image by running:
+  ```
+  $ make build-nvidia-sawyer-robot 
+  ```
+3. After the image is built, run the container:
+  ```
+  $ make run-nvidia-sawyer-robot
+  ```
+3. Rviz should open with Sawyer in it. Now you can plan and execute trajectories through rviz.
+
+4. To exit the container, type `sudo docker stop sawyer-robot` in a new terminal.
