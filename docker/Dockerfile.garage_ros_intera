@@ -1,0 +1,49 @@
+ARG PARENT_IMAGE=rlworkgroup/garage-headless-ros-intera-py2:latest
+FROM $PARENT_IMAGE
+
+# Packages required in garage to run rospy and intera_interface
+RUN /bin/bash -c 'source activate garage && \
+  pip install \
+    catkin_pkg \
+    empy \
+    rospkg'
+
+# Install intera and geometry. The latter is mainly required due to
+# ROS TF (transform) package.
+COPY intera_geom.rosinstall /root/ros_ws/src
+RUN /bin/bash -c 'cd /root/ros_ws/ && \
+  cd /root/ros_ws/src && \
+  wstool init . && \
+  wstool merge intera_geom.rosinstall && \
+  wstool update'
+
+# Install any dependencies for intera and geometry, and then compile them
+# with the Python executable used by garage.
+RUN /bin/bash -c 'cd /root/ros_ws/ && \
+  apt -qy update && \
+  rosdep update -qy && \
+  rosdep install -qy --from-paths src/ --ignore-src --rosdistro kinetic && \
+  source activate garage && \
+  source /opt/ros/kinetic/setup.bash && \
+  catkin_make --cmake-args -DPYTHON_EXECUTABLE="$(which python)"'
+
+# cv2.so is installed with ros-kinetic-opencv3, but it's compiled for Python2,
+# causing compatibility issues with Python3 in garage. We cannot  uninstall
+# ros-kinetic-opencv3 since other packages rely on it, nor we can remove it
+# from the PATH since other packages are imported from it. Since Python3 comes
+# with its own compiled cv2, we're deleting the cv2 compiled for Python2.
+RUN /bin/bash -c 'if [[ -f /opt/ros/kinetic/lib/python2.7/dist-packages/cv2.so ]]; then \
+  rm /opt/ros/kinetic/lib/python2.7/dist-packages/cv2.so; fi'
+
+# Although the intera and other libraries are now compiled for Python3, they
+# still have the Python2 syntax. This script sets them all to Python3.
+RUN /bin/bash -c 'packages=(intera_sdk); \
+  for package in ${packages[@]}; do \
+    python_scripts="$(find /root/ros_ws/src/${package} -name "*.py")"; \
+    for script in ${python_scripts[@]}; do \
+      2to3 -w ${script} --no-diffs > /dev/null 2>&1; \
+    done; \
+  done'
+
+# This allows us to import intera_interface from anywhere.
+RUN echo "source /root/ros_ws/devel/setup.bash" >> /root/.bashrc

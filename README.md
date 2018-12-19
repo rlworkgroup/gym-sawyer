@@ -20,13 +20,14 @@ container for the simulated Sawyer in the ROS environment using an NVIDIA GPU.
 
 ##### Prerequisites
 
-- Ubuntu 16.04.
 - Install [Docker CE](https://docs.docker.com/install/linux/docker-ce/ubuntu/#install-docker-ce)
 - Install [Docker Compose](https://docs.docker.com/compose/install/#install-compose)
 - Install the latest NVIDIA driver, tested
   on [nvidia-390](https://tecadmin.net/install-latest-nvidia-drivers-ubuntu/)
 - [Install nvidia-docker2](https://github.com/NVIDIA/nvidia-docker#ubuntu-140416041804-debian-jessiestretch)
 - Clone this repository in your local workspace
+
+Tested on Ubuntu 16.04
 
 ##### Instructions
 
@@ -104,3 +105,63 @@ container for the Sawyer robot in the ROS environment using an NVIDIA GPU.
 3. Rviz should open with Sawyer in it. Now you can plan and execute trajectories through rviz.
 
 4. To exit the container, type `sudo docker stop sawyer-robot` in a new terminal.
+
+### Garage-ROS-Intera
+
+To run Reinforcement Learning algorithms along with the Sawyer robot, we use
+the [garage](https://github.com/rlworkgroup/garage) docker images that include
+an extensive library of utilities and primitives for RL experiments.
+
+On top of the garage images, we add the layers for ROS and Intera that work
+with Python3 (garage runs with Python3), so we're able to communicate with
+Sawyer through ROS communication using the convenient libraries for Python
+`rospy` and `intera_interface`.
+
+Under this schema, two docker containers need to run: one for the simulated or
+real sawyer, and another with garage-ros-intera. The former creates the ROS
+master while the latter subscribes to the ROS topics to control and visualize
+what Sawyer is doing through Reinforcement Learning algorithms.
+
+The RL environment for Sawyer is still under development, but currently it is
+possible to build and launch a container with garage-ros-intera.
+
+##### Prerequisites
+
+- Install [Docker CE](https://docs.docker.com/install/linux/docker-ce/ubuntu/#install-docker-ce)
+- Install [Docker Compose](https://docs.docker.com/compose/install/#install-compose)
+
+This setup was tested on Ubuntu 16.04.
+
+##### Instructions
+
+In the root of the gym-sawyer repository execute:
+```
+$ make run-garage-<type>-ros RUN_CMD="python examples/tf/trpo_cartpole.py"
+```
+Where type can be:
+- headless: no viewer windows are generated from the container.
+- nvidia: viewer windows generated with NVIDIA drivers.
+If your computer has an NVIDIA GPU, use this image to render the
+environments in garage. Pre-requisites are the same as for the Sawyer
+Simulation image.
+
+The command to execute in the image is specified in the variable `RUN_CMD`.
+
+Also, the garage release version can be specified with the variable
+`GARAGE_VER`. For example:
+```
+$ make run-garage-<type>-ros GARAGE_VER="2018.10" RUN_CMD="..."
+```
+Otherwise, the latest version of garage in the master branch is used.
+
+###### Run your local repository of garage with ros-intera
+
+If you're working with garage in your local repository and would like to
+include your latests changes, follow these instructions.
+
+1. Make sure to run build your docker image for garage first. For
+  further information, visit [garage](ihttps://github.com/rlworkgroup/garage/blob/master/docker/README.md).
+2. Then rebuild and run the garage-ros image:
+  ```
+  $ make run-garage-<type>-ros RUN_CMD="..."
+  ```
