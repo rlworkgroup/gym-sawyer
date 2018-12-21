@@ -87,6 +87,7 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
                  action_scale=1.0,
                  randomize_start_jpos=False,
                  collision_whitelist=COLLISION_WHITELIST,
+                 never_done=True,
                  terminate_on_collision=False,
                  collision_penalty=0.,
                  reward_type='dense',
@@ -113,6 +114,7 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
         self._desired_goal = None  # type: np.array
         self.gripper_state = 0.
         self._is_success = False
+        self._never_done = never_done
 
         self._reward_type = reward_type
         self._control_method = control_method
@@ -273,7 +275,6 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
         # Clip to action space
         a *= self._action_scale
         a = np.clip(a, self.action_space.low, self.action_space.high)
-
         if self._control_method == "torque_control":
             self.forward_dynamics(a)
             self.sim.forward()
@@ -293,9 +294,9 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
                 self.joint_position_space.low[:],
                 self.joint_position_space.high[:]
             )
-            for _ in range(4):
-                self.sim.data.ctrl[:] = next_pos
-                self.sim.forward()
+            self.sim.data.ctrl[:] = next_pos[:]
+            self.sim.forward()
+            for _ in range(5):
                 self.sim.step()
         else:
             raise NotImplementedError
@@ -323,7 +324,7 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
 
         self._is_success = self._success_fn(self, self._achieved_goal,
                                             self._desired_goal, info)
-        done = False
+        done = self._is_success and not self._never_done
 
         # collision detection
         if in_collision:
@@ -482,3 +483,6 @@ class SawyerEnvWrapper:
     @property
     def observation_space(self):
         return self.env.observation_space
+
+    def close(self):
+        self.env.close()
