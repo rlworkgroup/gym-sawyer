@@ -1,0 +1,12 @@
+<mujoco>
+  <body name="peg" pos="0.75 0.1 0.035">
+    <!-- contype/conaffinity set to not collide between head and body geoms -->
+    <geom name="peg:head" type="box"
+      contype="1" conaffinity="2" rgba="0 0 1 1"
+      size="0.025 0.025 0.025"/>
+    <geom name="peg:body" type="cylinder"
+      contype="1" conaffinity="2"
+      rgba="0 0 1 1" size=".015 .03" pos="0 0 -0.025"/>
+    <joint name="peg:joint" type="free" damping="0.01"/>
+  </body>
+</mujoco>

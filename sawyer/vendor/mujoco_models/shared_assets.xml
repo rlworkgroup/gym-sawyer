@@ -19,4 +19,7 @@
   <mesh name="red_bin_v1" file="red_bin_v1.STL"/>
   <mesh name="green_bin_v1" file="green_bin_v1.STL"/>
   <mesh name="pedestal_table" file="pedestal_table.STL"/>
+  <mesh name="box_body" scale="0.001 0.001 0.001" file="box_body.STL"/>
+  <mesh name="box_lid" scale="0.001 0.001 0.001" file="box_lid.STL"/>
+  <mesh name="box_triangle" scale="0.001 0.001 0.001" file="box_triangle.STL"/>
 </mujoco>

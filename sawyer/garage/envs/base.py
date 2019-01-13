@@ -8,8 +8,11 @@ import gym
 
 from sawyer.garage.core import Parameterized
 from sawyer.garage.core import Serializable
-from tests.quirks import KNOWN_GYM_NOT_CLOSE_VIEWER
 
+KNOWN_GYM_NOT_CLOSE_VIEWER = [
+    "gym.envs.mujoco",
+    "gym.envs.robotics"
+]
 
 class GarageEnv(gym.Wrapper, Parameterized, Serializable, metaclass=ABCMeta):
     """
