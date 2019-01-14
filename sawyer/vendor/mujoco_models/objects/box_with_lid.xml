@@ -10,7 +10,7 @@
 -->
 
 <mujoco>
-  <body name="box_base" pos="0.25 0.0 0.005">
+  <body name="box_base" pos="0.45 0.0 0.005">
     <geom name="box_base:mesh" type="mesh" contype="0" conaffinity="0" rgba="0.87 0.72 0.52 1" mesh="box_body"/>
     <!-- contype/conaffinity set to avoid collision between body and lid geoms -->
     <geom name="box_base:b1" type="box"
