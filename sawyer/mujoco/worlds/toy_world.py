@@ -143,6 +143,7 @@ class ToyWorld(World):
     def reset(self):
         for obj in self._boxes + self._pegs:
             obj.reset()
+        self._env.sim.forward()
         return self.get_observation()
 
     def get_observation(self):
