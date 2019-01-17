@@ -4,6 +4,8 @@ import gym
 import moveit_commander
 import numpy as np
 
+from sawyer.mujoco.tasks import (ReachTask, PickTask, PlaceTask, InsertTask,
+                                 RemoveTask, OpenTask, CloseTask)
 from sawyer.ros.envs.sawyer.sawyer_env import SawyerEnv
 from sawyer.ros.robots.sawyer import Sawyer
 from sawyer.ros.worlds.block_world import ToyWorld
@@ -37,7 +39,35 @@ class ToyEnv(SawyerEnv, Serializable):
                                self._moveit_robot.get_planning_frame(),
                                simulated)
 
-        #TODO: Set up task list
+        if task_list:
+            self._task_list = task_list
+        else:
+            tasks = [
+                PickTask,    # Pick up peg
+                ReachTask,   # Move peg above box
+                InsertTask,  # Insert peg into hole
+                OpenTask,    # Open box lid
+                RemoveTask,  # Remove peg from hole
+                PlaceTask,   # Place peg back
+                # PickTask,    # Pick up block
+                # PlaceTask,   # Place block into box
+                # PickTask,    # Pick up peg
+                # ReachTask,   # Move peg above box
+                # InsertTask,  # Insert peg into hole
+                # CloseTask,   # Close box lid
+                # PlaceTask,   # Place peg back
+                ]
+            task_args = [
+                {'pick_object': 'peg'},
+                {'location': [0.65, 0., 0.]},
+                {'key_object': 'peg', 'lock_object': 'box_lid'},
+                {'box_object': 'box_base', 'lid_object': 'box_lid'},
+                {'key_object': 'peg', 'lock_object': 'box_lid'},
+                {'place_object': 'peg', 'location': [0.65, 0., 0.]},
+            ]
+            self._task_list = [task(**kwa) for task, kwa in
+                               zip(tasks, task_args)]
+        self._active_task = self._task_list[0]
 
         SawyerEnv.__init__(self, simulated=simulated)
 
@@ -53,7 +83,6 @@ class ToyEnv(SawyerEnv, Serializable):
 
     @rate_limited(STEP_FREQ)
     def step(self, action):
-        #TODO: copy and clip action
         self._robot.send_command(action)
         obs = self.get_observation
 
@@ -99,6 +128,12 @@ class ToyEnv(SawyerEnv, Serializable):
 
         return obs, r, done, info
 
+    def reset(self):
+        self._robot.reset()
+        self._world.reset()
+
+        return self.get_observation()
+
     def sample_goal(self):
         """
         Samples a new goal and returns it.
@@ -133,6 +168,15 @@ class ToyEnv(SawyerEnv, Serializable):
     def is_success(self, obs, info):
         return (self._active_task == self._task_list[-1] and
             self._active_task.is_success(obs, info))
+
+    def next_task(self):
+        # Set up env to for next task in sequence
+        active_task_idx = self._task_list.index(self._active_task)
+        if active_task_idx + 1 == len(self._task_list):
+            return True  # Done with all tasks
+        else:
+            self._active_task = self._task_list[active_task_idx + 1]
+            return False
 
     def reward(self, achieved_goal, goal):
         """
