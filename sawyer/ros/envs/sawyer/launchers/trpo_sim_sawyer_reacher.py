@@ -6,12 +6,12 @@ import moveit_commander
 import numpy as np
 import rospy
 
-from sawyer.garage.baselines import LinearFeatureBaseline
+from garage.baselines import LinearFeatureBaseline
 from sawyer.ros.envs.sawyer import ReacherEnv
-from sawyer.garage.misc.instrument import run_experiment
-from sawyer.garage.theano.algos import TRPO
-from sawyer.garage.theano.envs import TheanoEnv
-from sawyer.garage.theano.policies import GaussianMLPPolicy
+from garage.experiment import run_experiment
+from garage.tf.algos import TRPO
+from garage.tf.envs import TfEnv
+from garage.tf.policies import GaussianMLPPolicy
 
 INITIAL_ROBOT_JOINT_POS = {
     'right_j0': -0.140923828125,
@@ -33,13 +33,14 @@ def run_task(*_):
 
     rospy.init_node('trpo_sim_sawyer_reacher_exp', anonymous=True)
 
-    env = TheanoEnv(
-        ReacherEnv(
-            initial_goal,
-            initial_joint_pos=INITIAL_ROBOT_JOINT_POS,
-            simulated=True))
+    env = TfEnv(
+            ReacherEnv(
+                initial_goal,
+                initial_joint_pos=INITIAL_ROBOT_JOINT_POS,
+                simulated=False,
+                robot_control_mode='position'))
 
-    rospy.on_shutdown(env.shutdown)
+    rospy.on_shutdown(env.env.shutdown)
 
     env.initialize()
 
