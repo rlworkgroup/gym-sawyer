@@ -7,32 +7,50 @@ from geometry_msgs.msg import (Point, Pose, PoseStamped, Quaternion,
 import gym
 import numpy as np
 import rospy
-
+from tf import TransformListener
 from sawyer.ros.worlds.gazebo import Gazebo
 from sawyer.ros.worlds.world import World
 import sawyer.garage.misc.logger as logger
-try:
-    from sawyer.garage.config import AR_TOPICS
-except ImportError:
-    raise NotImplementedError(
-        "Please set AR_TOPICS in sawyer.garage.config_personal.py! "
-        "example 1:"
-        "   AR_TOPICS = ['<ar_topic_name>']"
-        "example 2:"
-        "   # if you are not using real robot and AR tags"
-        "   AR_TOPICS = []")
 
-class BoxWithLid:
-    #TODO: Track lid separately from box
-    def __init__(self, name, initial_pos, random_delta_range, resource=None):
+class BoxWithLid:    
+
+    class Lid:
+        def __init__(self, name, initial_pos):
+            self._name = name
+            self._initial_pos = Point(
+                x=initial_pos[0], y=initial_pos[1], z=initial_pos[2])
+            self._position = Point(
+                x=initial_pos[0], y=initial_pos[1], z=initial_pos[2])
+            self._orientation = Quaternion(x=0., y=0., z=0., w=1.)
+
+        @property
+        def name(self):
+            return self._name
+
+        @property
+        def position(self):
+            return self._position
+
+        @position.setter
+        def position(self, value):
+            self._position = value
+
+        @property
+        def orientation(self):
+            return self._orientation
+
+        @orientation.setter
+        def orientation(self, value):
+            self._orientation = value 
+
+    def __init__(self, name, init_pos, lid_name, lid_init_pos, random_delta_range, resource=None):
         self._name = name
-        self._resource = resource
-        self._initial_pos = Point(
-            x=initial_pos[0], y=initial_pos[1], z=initial_pos[2])
-        self._random_delta_range = random_delta_range
-        self._position = Point(
-            x=initial_pos[0], y=initial_pos[1], z=initial_pos[2])
-        self._orientation = Quaternion(x=0., y=0., z=0., w=1.)
+        self._resource = resource                 
+        self._initial_pos = Point(x=init_pos[0], y=init_pos[1], z=init_pos[2])
+        self._random_delta_range = random_delta_range         
+        self._position = Point(x=init_pos[0], y=init_pos[1], z=init_pos[2])
+        self._orientation = Quaternion(x=0., y=0., z=0., w=1.)        
+        self._lid = self.Lid(lid_name, lid_init_pos)
 
     @property
     def random_delta_range(self):
@@ -64,7 +82,11 @@ class BoxWithLid:
 
     @orientation.setter
     def orientation(self, value):
-        self._orientation = value
+        self._orientation = value        
+
+    @property
+    def lid(self):
+        return self._lid
 
     def reset(self):
         random_delta = np.zeros(2)
@@ -79,26 +101,36 @@ class BoxWithLid:
         return new_pos
 
     def get_observation(self):
-        pos = np.array(
+        box_pos = np.array(
             [self.position.x, self.position.y, self._position.z])
-        ori = np.array([
+        box_ori = np.array([
             self.orientation.x, self.orientation.y, self.orientation.z,
             self.orientation.w
         ])
+        lid_pos = np.array(
+            [self.lid.position.x, self.lid.position.y, self.lid.position.z])
+        lid_ori = np.array([
+            self.lid.orientation.x, self.lid.orientation.y, self.lid.orientation.z,
+            self.lid.orientation.w
+        ])
+
         return {
-            '{}_position'.format(self.name): pos,
-            '{}_orientation'.format(self.name): ori,
+            '{}_base_position'.format(self.name): box_pos,
+            '{}_base_orientation'.format(self.name): box_ori,
+            '{}_lid_position'.format(self.lid.name): lid_pos,
+            '{}_lid_orientation'.format(self.lid.name): lid_ori,
         }
 
+
 class BlockPeg:
-    def __init__(self, name, initial_pos, random_delta_range, resource=None):
+    def __init__(self, name, init_pos, random_delta_range, resource=None):
         self._name = name
         self._resource = resource
-        self._initial_pos = Point(
-            x=initial_pos[0], y=initial_pos[1], z=initial_pos[2])
+        self._init_pos = Point(
+            x=init_pos[0], y=init_pos[1], z=init_pos[2])
         self._random_delta_range = random_delta_range
         self._position = Point(
-            x=initial_pos[0], y=initial_pos[1], z=initial_pos[2])
+            x=init_pos[0], y=init_pos[1], z=init_pos[2])
         self._orientation = Quaternion(x=0., y=0., z=0., w=1.)
 
     @property
@@ -161,8 +193,9 @@ class BlockPeg:
             '{}_orientation'.format(self.name): ori,
         }
 
+
 class ToyWorld(World):
-    def __init__(self, moveit_scene, frame_id, simulated=False):
+    def __init__(self, moveit_scene, frame_id, simulated=False, num_of_boxes=1, num_of_pegs=1):
         self._boxes = []
         self._pegs = []
         self._box_state_subs = []
@@ -170,6 +203,10 @@ class ToyWorld(World):
         self._simulated = simulated
         self._moveit_scene = moveit_scene
         self._frame_id = frame_id
+        self._num_of_boxes = num_of_boxes
+        self._num_of_pegs = num_of_pegs
+        self._tf_listener = None
+        self._base_frame = "base_d"
 
     def initialize(self):
         if self._simulated:
@@ -186,7 +223,7 @@ class ToyWorld(World):
                 osp.join(World.MODEL_DIR, 'box_with_lid/model.urdf'))
             box = BoxWithLid(
                 name='box',
-                initial_pos=(0.5725, 0.1265, 0.90),
+                init_pos=(0.5725, 0.1265, 0.90),
                 random_delta_range=0,
                 resource=osp.join(World.MODEL_DIR, 'box_with_lid/model.urdf'))
             self._boxes.append(box)
@@ -209,27 +246,22 @@ class ToyWorld(World):
                 rospy.Subscriber('/gazebo/model_states', ModelStates,
                     self._gazebo_update_obj_states))
         else:
-            #TODO: AR tags don't have separate topics for each object!
-            for ar_topic in AR_TOPICS:
-                if topic_is_box:
-                    box = BoxWithLid(
-                        name='box',
-                        initial_pos=(),
-                        random_delta_range=0,
-                        resource=ar_topic)
-                    self._boxes.append(box)
-                    self._obj_state_subs.append(
-                        rospy.Subscriber(
-                            box.resource,
-                            TransformStamped,
-                            self._ar_update_obj_states))
-                elif topic_is_peg:
-                    peg = BlockPeg(
-                        name='peg',
-                        initial_pos=(),
-                        random_delta_range=0,
-                        resource=ar_topic)
-                    self._pegs.append(peg)
+            self._tf_listener = TransformListener()
+
+            for i in range(self._num_of_boxes):
+                box_name = 'box_{0}'.format(i)
+                lid_name = 'lid_{0}'.format(i)
+                box_init_pos, _ = self.get_box_location(box_name)
+                lid_init_pos, _ = self.get_lid_location(lid_name)
+                box = BoxWithLid(box_name, box_init_pos, lid_name, lid_init_pos, 
+                    random_delta_range=0)
+                self._boxes.append(box)
+
+            for i in range(self._num_of_pegs):  
+                peg_name = 'peg_{}'.format(i)
+                peg_init_pos, _ = self.get_peg_location(peg_name)               
+                peg = BlockPeg(name=peg_name, init_pos=peg_init_pos, random_delta_range=0)
+                self._pegs.append(peg)
 
         # Add table to moveit
         pose_stamped = PoseStamped()
@@ -302,10 +334,66 @@ class ToyWorld(World):
         self._moveit_scene.remove_world_object('table')
 
     def get_observation(self):
+        if not self._simulated:
+            #Update box and lid positions using apriltags
+            for box in self._boxes:
+                box_pos, box_ori = self.get_box_location(box.name)
+                box.position = Point(x=box_pos[0], y=box_pos[1], z=box_pos[2])
+                box.orientation = Quaternion(x=box_ori[0], y=box_ori[1], z=box_ori[2], w=box_ori[3])
+                
+                lid_pos, lid_ori = self.get_lid_location(box.lid.name)
+                box.lid.position = Point(x=lid_pos[0], y=lid_pos[1], z=lid_pos[2])
+                box.lid.orientation = Quaternion(x=lid_ori[0], y=lid_ori[1], z=lid_ori[2], w=lid_ori[3])
+
+            #Update peg position using apriltags
+            for peg in self._pegs:
+                peg_pos, peg_ori = self.get_peg_location(peg.name)
+                peg.position = Point(x=peg_pos[0], y=peg_pos[1], z=peg_pos[2])
+                peg.orientation = Quaternion(x=peg_ori[0], y=peg_ori[1], z=peg_ori[2], w=peg_ori[3])
+
+                
         obs = {}
         for obj in self._boxes + self._pegs:
             obs = {**obs, **obj.get_observation()}
         return obs
+
+    def get_box_location(self, box_frame):
+        box_pos = None
+        box_ori = None
+
+        #Wait for transform base -> box
+        self._tf_listener.waitForTransform(
+            self._base_frame, box_frame, rospy.Time(0), rospy.Duration(2))
+        #Get transform base -> box
+        box_pos, box_ori = self._tf_listener.lookupTransform(
+            self._base_frame, box_frame, rospy.Time(0))
+        
+        return box_pos, box_ori
+
+    def get_lid_location(self, lid_frame):        
+        lid_pos = None
+        lid_ori = None
+
+        #Wait for transform base -> lid
+        self._tf_listener.waitForTransform(
+            self._base_frame, lid_frame, rospy.Time(0), rospy.Duration(2))
+        #Get transform base -> lid
+        lid_pos, lid_ori = self._tf_listener.lookupTransform(
+            self._base_frame, lid_frame, rospy.Time(0))
+        return lid_pos, lid_ori
+
+    def get_peg_location(self, peg_frame):        
+        peg_pos = None
+        peg_ori = None
+        
+        #Wait for transform base -> peg
+        self._tf_listener.waitForTransform(
+            self._base_frame, peg_frame, rospy.Time(0), rospy.Duration(2))
+        #Get transform base -> peg
+        peg_pos, peg_ori = self._tf_listener.lookupTransform(
+            self._base_frame, peg_frame, rospy.Time(0))
+
+        return peg_pos, peg_ori
 
     @property
     def observation_space(self):
