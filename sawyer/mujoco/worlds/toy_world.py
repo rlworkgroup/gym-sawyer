@@ -108,7 +108,7 @@ class ToyWorld(World):
                  env,
                  xml_config,
                  box_lid_pos=0.,
-                 peg_pos=[0.75, 0.1, 0.1],
+                 peg_pos=[0.7, -0.2, 0.06],
                  peg_delta_range=[0., 0.]):
         """
         World containing a box with a lid, and a peg to open it.

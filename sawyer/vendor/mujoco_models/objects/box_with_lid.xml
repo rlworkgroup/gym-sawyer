@@ -10,9 +10,8 @@
 -->
 
 <mujoco>
-  <body name="box_base" pos="0.45 0.0 0.005">
+  <body name="box_base" pos="0.756 -0.042 0.002" euler="0 0 1.571">
     <geom name="box_base:mesh" type="mesh" contype="0" conaffinity="0" rgba="0.87 0.72 0.52 1" mesh="box_body"/>
-    <!-- contype/conaffinity set to avoid collision between body and lid geoms -->
     <geom name="box_base:b1" type="box"
       contype="1" conaffinity="1"
       size="0.06985 0.002778 0.06985" pos="0.06985 0.136922 0.06985" rgba="0 0 0 0"/>
@@ -51,7 +50,7 @@
         contype="1" conaffinity="1"
         size="0.015 0.025 0.002381" pos="0.091 0.1036 0.002381" euler="0 0 0.523" rgba="0 0 0 0"/>
       <joint name="box_lid:joint" type="slide" axis="0 1 0"
-        limited="true" range="-0.12 0" damping="0.8"/>
+        limited="true" range="-0.12 0" damping="1.0"/>
     </body>
   </body>
 </mujoco>
