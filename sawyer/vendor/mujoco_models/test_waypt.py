@@ -4,10 +4,18 @@ import numpy as np
 import time
 
 WAYPOINTS = [
-    [0.85, 0.065, 0.25, 1.],
-    [0.85, 0.065, 0.03, 1.],
-    [0.85, 0.065, 0.03, 0.],
-    [0.85, 0.065, 0.25, 0.],
+# ToyEnv pickup
+    # [0.85, 0.065, 0.25, 1.],
+    # [0.85, 0.065, 0.03, 1.],
+    # [0.85, 0.065, 0.03, 0.],
+    # [0.85, 0.065, 0.25, 0.],
+# Demo box lid
+    [0.52, 0.17, 0.20, 0.],
+    [0.52, 0.09, 0.20, 0.],
+    [0.52, 0.09, 0.10, 0.],
+    [0.52, 0.02, 0.10, 0.],
+    [0.52, 0.09, 0.10, 0.],
+    [0.52, 0.09, 0.20, 0.],
 ]
 
 def forwardn(n):
@@ -26,6 +34,6 @@ env = ToyEnv(xml_path='toyenv_task.xml', xml_config='task')
 waypoints = np.asarray(WAYPOINTS).reshape((-1, 4))
 ws = WaypointSequencer(env, waypoints, toyenv_distance, toyenv_action)
 
-forwardn(1000)
+forwardn(500)
 ws.run(True)
-forwardn(1000)
+forwardn(100)
