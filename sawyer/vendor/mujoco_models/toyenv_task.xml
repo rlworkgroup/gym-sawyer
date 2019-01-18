@@ -23,7 +23,7 @@
 
     <include file="sawyer_robot.xml"/>
     <body mocap="true" name="mocap" pos="1.04059217 0.160202 0.31832305" quat="-0.45439303 0.54237218 -0.45784103 0.53827594">
-      <geom conaffinity="0" contype="0" pos="0 0 0" rgba="1.0 1.0 1.0 0.0" size="0.08 0.04 0.02" type="box"></geom>
+      <geom conaffinity="0" contype="0" pos="0 0 0.1" rgba="1.0 1.0 1.0 0.5" size="0.01" type="sphere"></geom>
     </body>
 
     <include file="objects/box_with_lid.xml"/>
