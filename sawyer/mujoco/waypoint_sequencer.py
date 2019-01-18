@@ -60,7 +60,8 @@ class WaypointSequencer:
             waypoint = self._waypoints[waypoint_idx, :]
             # Determine distance to waypoint
             dist = self._distance_fn(obs, waypoint)
-            if (np.linalg.norm(dist) < self._success_thresh):
+            if (np.linalg.norm(dist) < self._success_thresh and 
+                np.linalg.norm(info['gripper_state'] - waypoint[3]) < 0.1):
                 waypoint_idx += 1
                 if waypoint_idx < self._waypoints.shape[0]:
                     print("Reached waypoint {0} with obs:\n{1}".
