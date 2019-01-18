@@ -4,13 +4,18 @@ import time
 def toyenv_distance(obs, waypoint):
     gripper_pos = obs[:3]
     goal_pos = waypoint[:3]
-    return goal_pos - gripper_pos
+    gripper_state_dist = np.array([obs[3] - waypoint[3]])
+    return np.concatenate((goal_pos - gripper_pos, gripper_state_dist), axis=-1)
 
 def toyenv_action(dist, waypoint, epsilon=1e-8, action_scale=0.01):
-    dist = dist / (np.linalg.norm(dist) + epsilon)
+    dist = dist[:3] / (np.linalg.norm(dist[:3]) + epsilon)
     action = dist * action_scale
     action = np.concatenate((action, [waypoint[3]]), axis=-1)
     return action
+
+def toyenv_eval(dist, waypoint, success_thresh):
+    return (np.linalg.norm(dist[:3]) < success_thresh and
+        dist[3] < success_thresh)
 
 class WaypointSequencer:
     """
@@ -21,6 +26,7 @@ class WaypointSequencer:
                  waypoints,
                  distance_fn,
                  action_fn,
+                 eval_fn,
                  max_n_steps=10000,
                  success_thresh=0.01):
         """
@@ -35,6 +41,7 @@ class WaypointSequencer:
         self._waypoints = waypoints
         self._distance_fn = distance_fn
         self._action_fn = action_fn
+        self._eval_fn = eval_fn
         self._max_n_steps = max_n_steps
         self._success_thresh = success_thresh
 
@@ -60,8 +67,7 @@ class WaypointSequencer:
             waypoint = self._waypoints[waypoint_idx, :]
             # Determine distance to waypoint
             dist = self._distance_fn(obs, waypoint)
-            if (np.linalg.norm(dist) < self._success_thresh and 
-                np.linalg.norm(info['gripper_state'] - waypoint[3]) < 0.1):
+            if (self._eval_fn(dist, waypoint, self._success_thresh)):
                 waypoint_idx += 1
                 if waypoint_idx < self._waypoints.shape[0]:
                     print("Reached waypoint {0} with obs:\n{1}".
