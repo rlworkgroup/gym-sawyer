@@ -42,12 +42,16 @@ class BoxWithLid(WorldObject):
 
     @property
     def observation_space(self):
-        return Box(np.inf, -np.inf, shape=(7,), dtype=np.float32)
+        return Box(np.inf, -np.inf, shape=(14,), dtype=np.float32)
 
     def get_observation(self):
+        box_xpos = self._env.sim.data.get_body_xpos(self.box_name)
+        box_xquat = self._env.sim.data.get_body_xquat(self.box_name)
         lid_xpos = self._env.sim.data.get_body_xpos(self.lid_name)
         lid_xquat = self._env.sim.data.get_body_xquat(self.lid_name)
         return {
+            '{}_position'.format(self.box_name): box_xpos,
+            '{}_rotation'.format(self.box_name): box_xquat,
             '{}_position'.format(self.lid_name): lid_xpos,
             '{}_rotation'.format(self.lid_name): lid_xquat,
         }
@@ -55,6 +59,8 @@ class BoxWithLid(WorldObject):
     def reset(self):
         self._env.sim.data.set_joint_qpos(
             '{}:joint'.format(self.lid_name), self._initial_lid_pos)
+        self._env.sim.data.set_joint_qvel(
+            '{}:joint'.format(self.lid_name), np.zeros(1))
 
 
 class BlockPeg(WorldObject):
@@ -102,6 +108,8 @@ class BlockPeg(WorldObject):
         body_qpos = np.concatenate((body_xpos, [1, 0, 0, 0]), axis=0)
         self._env.sim.data.set_joint_qpos(
             '{}:joint'.format(self.name), body_qpos)
+        self._env.sim.data.set_joint_qvel(
+            '{}:joint'.format(self.name), np.zeros(6))
 
 class ToyWorld(World):
     def __init__(self,
