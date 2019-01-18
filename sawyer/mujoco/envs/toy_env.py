@@ -234,6 +234,7 @@ class ToyEnv(MujocoEnv, Serializable):
             obs = np.concatenate(obs).ravel()
         elif self._xml_config == 'task':
             obs.append(robot_obs['sawyer_gripper_position'])
+            obs.append(robot_obs['sawyer_gripper_state'])
             obs.append(world_obs['box_lid_position'])
             obs.append(world_obs['box_lid_rotation'])
             obs.append(world_obs['peg_position'])
