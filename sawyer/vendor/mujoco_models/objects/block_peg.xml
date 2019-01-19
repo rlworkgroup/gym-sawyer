@@ -2,10 +2,10 @@
   <body name="peg" pos="0.824 0.302 0.09">
     <!-- contype/conaffinity set to not collide between head and body geoms -->
     <geom name="peg:head" type="box"
-      contype="1" conaffinity="2" mass="0.01" friction="1 1.05 0.01"
+      contype="1" conaffinity="3" mass="0.01" friction="1 1.05 0.01"
       rgba="0 0 1 1" size="0.025 0.025 0.025" pos="0 0 -0.025"/>
     <geom name="peg:body" type="cylinder"
-      contype="1" conaffinity="2" mass="0.01"
+      contype="1" conaffinity="3" mass="0.01"
       rgba="0 0 1 1" size=".0075 .03" pos="0 0 -0.055"/>
     <joint name="peg:joint" type="free" damping="0.01"/>
   </body>
