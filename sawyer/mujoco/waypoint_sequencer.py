@@ -72,7 +72,10 @@ class WaypointSequencer:
                 if waypoint_idx < self._waypoints.shape[0]:
                     print("Reached waypoint {0} with obs:\n{1}".
                           format(waypoint, obs))
-                    continue
+                    for _ in range(300):
+                        self._env.step(np.array([0., 0., 0.0003, waypoint[3]]))
+                        self._env.render()
+                        time.sleep(0.002)
                 else:
                     break
 
