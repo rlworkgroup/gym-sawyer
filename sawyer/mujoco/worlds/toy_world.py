@@ -1,9 +1,7 @@
 import numpy as np
 import os.path as osp
 
-from gym.envs.robotics.utils import reset_mocap_welds, reset_mocap2body_xpos
 from gym.spaces.box import Box
-import numpy as np
 
 from sawyer.garage.envs.mujoco.mujoco_env import MODEL_DIR
 from sawyer.garage.misc.overrides import overrides
