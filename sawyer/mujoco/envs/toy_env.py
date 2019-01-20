@@ -2,6 +2,7 @@ import numpy as np
 import os.path as osp
 import warnings
 
+from gym.envs.robotics.utils import reset_mocap2body_xpos
 from gym.spaces.box import Box
 
 from sawyer.garage.core import Serializable
@@ -37,8 +38,8 @@ class ToyEnv(MujocoEnv, Serializable):
                  robot=None,
                  world=None,
                  xml_path='toyenv_default.xml',
-                 xml_config='default',
                  task_list=None,
+                 reset_state=None,
                  completion_bonus=0.,
                  action_scale=1.0,
                  collision_penalty=0.,
@@ -51,7 +52,8 @@ class ToyEnv(MujocoEnv, Serializable):
             "ToyEnv is under development and has not been tested thoroughly. "
             "We make no guarantees that the env is solvable.")
 
-        self._xml_config = xml_config
+        self._xml_config = xml_path[7:-4]
+        self._reset_state = reset_state
         self._completion_bonus = completion_bonus
         self._action_scale = action_scale
         self._collision_penalty = collision_penalty
@@ -63,13 +65,15 @@ class ToyEnv(MujocoEnv, Serializable):
         if self._xml_config == 'default':
             self._robot = robot or PositionSpaceSawyer(
                     self, randomize_start_jpos=randomize_start_jpos)
-            self._world = world or ToyWorld(self, xml_config=xml_config)
+            self._world = world or ToyWorld(self, xml_config=self._xml_config)
+        # task config: Task space control + 1 box w/ lid and 1 peg
         elif self._xml_config == 'task':
             self._robot = robot or TaskSpaceSawyer(
                 self, randomize_start_jpos=randomize_start_jpos)
-            self._world = world or ToyWorld(self, xml_config=xml_config)
+            self._world = world or ToyWorld(self, xml_config=self._xml_config)
         else:
-            warnings.warn("Unknown ToyEnv xml_config: {}".format(xml_config))
+            warnings.warn("Unknown ToyEnv xml_config: {}".format(
+                self._xml_config))
 
         # Populate task list
         if task_list:
@@ -140,14 +144,19 @@ class ToyEnv(MujocoEnv, Serializable):
         return Box(high, low, dtype=np.float32)
 
     @overrides
-    def reset(self):
+    def reset(self, reset_state=None):
         self._step = 0
         self._active_task = self._task_list[0]
 
         super(ToyEnv, self).reset()
         self._robot.reset()
         self._world.reset()
+        if reset_state is not None:
+            super(ToyEnv, self).reset(init_state=reset_state)
+        elif self._reset_state is not None:
+            super(ToyEnv, self).reset(init_state=self._reset_state)
 
+        reset_mocap2body_xpos(self.sim)
         return self.get_obs()
 
     def render(self, mode='human'):
