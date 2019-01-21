@@ -117,8 +117,8 @@ class BoxWithLid:
         return {
             '{}_base_position'.format(self.name): box_pos,
             '{}_base_orientation'.format(self.name): box_ori,
-            '{}_lid_position'.format(self.lid.name): lid_pos,
-            '{}_lid_orientation'.format(self.lid.name): lid_ori,
+            '{}_lid_position'.format(self.name): lid_pos,
+            '{}_lid_orientation'.format(self.name): lid_ori,
         }
 
 
@@ -195,16 +195,12 @@ class BlockPeg:
 
 
 class ToyWorld(World):
-    def __init__(self, moveit_scene, frame_id, simulated=False, num_of_boxes=1, num_of_pegs=1):
-        self._boxes = []
-        self._pegs = []
-        self._box_state_subs = []
-        self._peg_state_subs = []
+    def __init__(self, moveit_scene, frame_id, simulated=False):
+        self._box = None
+        self._peg = None
         self._simulated = simulated
         self._moveit_scene = moveit_scene
         self._frame_id = frame_id
-        self._num_of_boxes = num_of_boxes
-        self._num_of_pegs = num_of_pegs
         self._tf_listener = None
         self._base_frame = "base_d"
 
@@ -226,7 +222,7 @@ class ToyWorld(World):
                 init_pos=(0.5725, 0.1265, 0.90),
                 random_delta_range=0,
                 resource=osp.join(World.MODEL_DIR, 'box_with_lid/model.urdf'))
-            self._boxes.append(box)
+            self._box = box
 
             # Block Peg
             Gazebo.load_gazebo_model(
@@ -238,30 +234,26 @@ class ToyWorld(World):
                 initial_pos=(0.5725, 0.1265, 0.90),
                 random_delta_range=0,
                 resource=osp.join(World.MODEL_DIR, 'block_peg/model.urdf'))
-            self._pegs.append(peg)
+            self._peg = peg
 
             # Waiting for models to be loaded before initializing subscriber
             rospy.wait_for_message('/gazebo/model_states')
-            self._obj_state_subs.append(
-                rospy.Subscriber('/gazebo/model_states', ModelStates,
-                    self._gazebo_update_obj_states))
+            self._obj_state_sub = rospy.Subscriber('/gazebo/model_states', ModelStates,
+                                       self._gazebo_update_obj_states)
         else:
             self._tf_listener = TransformListener()
-
-            for i in range(self._num_of_boxes):
-                box_name = 'box_{0}'.format(i)
-                lid_name = 'lid_{0}'.format(i)
-                box_init_pos, _ = self.get_box_location(box_name)
-                lid_init_pos, _ = self.get_lid_location(lid_name)
-                box = BoxWithLid(box_name, box_init_pos, lid_name, lid_init_pos, 
+            box_name = 'box'
+            lid_name = 'lid'
+            box_init_pos, _ = self.get_box_location(box_name)
+            lid_init_pos, _ = self.get_lid_location(lid_name)
+            box = BoxWithLid(box_name, box_init_pos, lid_name, lid_init_pos, 
                     random_delta_range=0)
-                self._boxes.append(box)
+            self._box = box
 
-            for i in range(self._num_of_pegs):  
-                peg_name = 'peg_{}'.format(i)
-                peg_init_pos, _ = self.get_peg_location(peg_name)               
-                peg = BlockPeg(name=peg_name, init_pos=peg_init_pos, random_delta_range=0)
-                self._pegs.append(peg)
+            peg_name = 'peg'
+            peg_init_pos, _ = self.get_peg_location(peg_name)               
+            peg = BlockPeg(name=peg_name, init_pos=peg_init_pos, random_delta_range=0)
+            self._peg = peg
 
         # Add table to moveit
         pose_stamped = PoseStamped()
@@ -279,7 +271,8 @@ class ToyWorld(World):
     def _gazebo_update_obj_states(self, data):
         model_states = data
         model_names = model_states.name
-        for obj in self._boxes + self._pegs:
+        objs = [self._box, self._peg]
+        for obj in objs:
             obj_idx = model_names.index(obj.name)
             obj_pose = model_states.pose[obj_idx]
             obj.position = obj_pose.position
@@ -297,14 +290,16 @@ class ToyWorld(World):
 
     def reset(self):
         if self._simulated:
-            for obj in self._boxes + self._pegs:
+            objs = [self._box, self._peg]
+            for obj in objs:
                 new_pos = obj.reset()
                 Gazebo.set_model_pose(
                     obj.name,
                     new_pose=Pose(
                         position=Point(x=new_pos.x, y=new_pos.y, z=new_pos.z)))
         else:
-            for obj in self._boxes + self._pegs:
+            objs = [self._box, self._peg]
+            for obj in objs:
                 new_pos = obj.reset()
                 logger.log('new position for {} is x = {}, y = {}, z = {}'.
                     format(obj.name, new_pos.x, new_pos.y, new_pos.z))
@@ -317,11 +312,10 @@ class ToyWorld(World):
                         ready = True
 
     def terminate(self):
-        for sub in self._box_state_subs + self._peg_state_subs:
-            sub.unregister()
-
+        self._obj_state_sub.unregister()
         if self._simulated:
-            for obj in self._boxes + self._pegs:
+            objs = [self._box, self._peg]
+            for obj in objs:
                 Gazebo.delete_gazebo_model(obj.name)
             Gazebo.delete_gazebo_model('table')
         else:
@@ -336,24 +330,23 @@ class ToyWorld(World):
     def get_observation(self):
         if not self._simulated:
             #Update box and lid positions using apriltags
-            for box in self._boxes:
-                box_pos, box_ori = self.get_box_location(box.name)
-                box.position = Point(x=box_pos[0], y=box_pos[1], z=box_pos[2])
-                box.orientation = Quaternion(x=box_ori[0], y=box_ori[1], z=box_ori[2], w=box_ori[3])
-                
-                lid_pos, lid_ori = self.get_lid_location(box.lid.name)
-                box.lid.position = Point(x=lid_pos[0], y=lid_pos[1], z=lid_pos[2])
-                box.lid.orientation = Quaternion(x=lid_ori[0], y=lid_ori[1], z=lid_ori[2], w=lid_ori[3])
+                        box_pos, box_ori = self.get_box_location(self._box.name)
+                        self._box.position = Point(x=box_pos[0], y=box_pos[1], z=box_pos[2])
+                        self._box.orientation = Quaternion(x=box_ori[0], y=box_ori[1], z=box_ori[2], w=box_ori[3])
+                        
+                        lid_pos, lid_ori = self.get_lid_location(self._box.lid.name)
+                        self._box.lid.position = Point(x=lid_pos[0], y=lid_pos[1], z=lid_pos[2])
+                        self._box.lid.orientation = Quaternion(x=lid_ori[0], y=lid_ori[1], z=lid_ori[2], w=lid_ori[3])
 
             #Update peg position using apriltags
-            for peg in self._pegs:
-                peg_pos, peg_ori = self.get_peg_location(peg.name)
-                peg.position = Point(x=peg_pos[0], y=peg_pos[1], z=peg_pos[2])
-                peg.orientation = Quaternion(x=peg_ori[0], y=peg_ori[1], z=peg_ori[2], w=peg_ori[3])
+                        peg_pos, peg_ori = self.get_peg_location(self._peg.name)
+                        self._peg.position = Point(x=peg_pos[0], y=peg_pos[1], z=peg_pos[2])
+                        self._peg.orientation = Quaternion(x=peg_ori[0], y=peg_ori[1], z=peg_ori[2], w=peg_ori[3])
 
                 
         obs = {}
-        for obj in self._boxes + self._pegs:
+        objs = [self._box, self._peg]
+        for obj in objs:
             obs = {**obs, **obj.get_observation()}
         return obs
 
@@ -397,11 +390,7 @@ class ToyWorld(World):
 
     @property
     def observation_space(self):
-        spaces = []
-        for box in self._boxes:
-            spaces.append(box.observation_space)
-        for peg in self._pegs:
-            spaces.append(peg.observation_space)
+        spaces = [self._box.observation_space, self._peg.observation_space]
 
         high = np.concatenate([sp.high for sp in spaces]).ravel()
         low = np.concatenate([sp.low for sp in spaces]).ravel()
