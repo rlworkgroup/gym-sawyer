@@ -10,13 +10,22 @@ import rospy
 from sawyer.ros.robots.kinematics_interfaces import StateValidity
 from sawyer.ros.robots.robot import Robot
 
+INITIAL_JOINT_STATE = {
+    'right_j0': -0.140923828125,
+    'right_j1': -1.2789248046875,
+    'right_j2': -3.043166015625,
+    'right_j3': -2.139623046875,
+    'right_j4': -0.047607421875,
+    'right_j5': -0.7052822265625,
+    'right_j6': -1.4102060546875,
+}
 
 class Sawyer(Robot):
     """Sawyer class."""
 
     def __init__(self,
-                 initial_joint_pos,
                  moveit_group,
+                 initial_joint_pos=INITIAL_JOINT_STATE,
                  control_mode='position'):
         """
         Sawyer class.
@@ -109,8 +118,7 @@ class Sawyer(Robot):
     def _move_to_start_position(self):
         if rospy.is_shutdown():
             return
-        self._limb.move_to_joint_positions(
-            self._initial_joint_pos, timeout=5.0)
+        self._limb.move_to_joint_positions(self._initial_joint_pos)
         self._gripper.open()
         rospy.sleep(1.0)
 
@@ -124,26 +132,17 @@ class Sawyer(Robot):
 
         :return: robot observation
         """
-        # cartesian space
-        gripper_pos = np.array(self._limb.endpoint_pose()['position'])
-        gripper_ori = np.array(self._limb.endpoint_pose()['orientation'])
-        gripper_lvel = np.array(self._limb.endpoint_velocity()['linear'])
-        gripper_avel = np.array(self._limb.endpoint_velocity()['angular'])
-        gripper_force = np.array(self._limb.endpoint_effort()['force'])
-        gripper_torque = np.array(self._limb.endpoint_effort()['torque'])
-
-        # joint space
-        robot_joint_angles = np.array(list(self._limb.joint_angles().values()))
-        robot_joint_velocities = np.array(
-            list(self._limb.joint_velocities().values()))
-        robot_joint_efforts = np.array(
-            list(self._limb.joint_efforts().values()))
-
-        obs = np.concatenate(
-            (gripper_pos, gripper_ori, gripper_lvel, gripper_avel,
-             gripper_force, gripper_torque, robot_joint_angles,
-             robot_joint_velocities, robot_joint_efforts))
-        return obs
+        return {
+            'gripper_position': np.array(self._limb.endpoint_pose()['position']),
+            'gripper_orientation': np.array(self._limb.endpoint_pose()['orientation']),
+            'gripper_lvel': np.array(self._limb.endpoint_velocity()['linear']),
+            'gripper_avel': np.array(self._limb.endpoint_velocity()['angular']),
+            'gripper_force': np.array(self._limb.endpoint_effort()['force']),
+            'gripper_torque': np.array(self._limb.endpoint_effort()['torque']),
+            'robot_joint_angles': np.array(list(self._limb.joint_angles().values())),
+            'robot_joint_velocities': np.array(list(self._limb.joint_velocities().values())),
+            'robot_joint_efforts': np.array(list(self._limb.joint_efforts().values()))
+        }
 
     @property
     def observation_space(self):
