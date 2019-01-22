@@ -17,31 +17,49 @@ class InsertTask(ComposableTask):
     def __init__(self,
                  key_object,
                  lock_object,
+                 never_done=False,
                  success_thresh=0.01,
+                 target_z_pos=0.20,
                  completion_bonus=0,
-                 c_dist=1,
-                 c_release=100):
+                 c_xydist=0.5,
+                 c_zdist=0.5):
         self._key_object = key_object
         self._lock_object = lock_object
+        self._never_done = never_done
+        self._success_thresh = success_thresh
+        self._target_z_pos = target_z_pos
         self._completion_bonus = completion_bonus
-        self._c_dist = c_dist
-        self._c_release = c_release
+        self._c_xydist = c_xydist
+        self._c_zdist = c_zdist
+
 
     def compute_reward(self, obs, info):
         key_pos = info['world_obs']['{}_position'.format(self._key_object)]
         lock_pos = info['world_obs']['{}_position'.format(self._lock_object)]
-        released = not info['grasped_{}'.format(self._key_object)]
-
-        key_height = key_pos[2] - lock_pos[2]  # Should always be positive
-        return -self._c_dist * key_height - self._c_release * released
-
-    def is_success(self, obs, info):
-        key_pos = info['world_obs']['{}_position'.format(self._key_object)]
-        lock_pos = info['world_obs']['{}_position'.format(self._lock_object)]
+        lock_site = info['hole_site']
         grasped = info['grasped_{}'.format(self._key_object)]
 
-        key_height = key_pos[2] - lock_pos[2]  # Should always be positive
-        return grasped and key_height < self._success_thresh
+        dxy_peg2hole = key_pos[:2] - lock_site[:2]
+        dz_peg = key_pos[2] - self._target_z_pos
+
+        r_xydist = (1 - np.tanh(np.linalg.norm(dxy_peg2hole))) * self._c_xydist
+        r_zdist = (1 - np.tanh(np.linalg.norm(dz_peg))) * self._c_zdist
+        return int(grasped) * (r_xydist + r_zdist)
+
+    def is_success(self, obs, info):
+        if self._never_done:
+            return False
+        key_pos = info['world_obs']['{}_position'.format(self._key_object)]
+        lock_pos = info['world_obs']['{}_position'.format(self._lock_object)]
+        lock_site = info['hole_site']
+        grasped = info['grasped_{}'.format(self._key_object)]
+
+        dxy_peg2hole = key_pos[:2] - lock_site[:2]
+        dz_peg = key_pos[2] - self._target_z_pos
+
+        return (grasped and
+            np.linalg.norm(dxy_peg2hole) < self._success_thresh and
+            np.linalg.norm(dz_peg) < self._success_thresh)
 
     @property
     def completion_bonus(self):
