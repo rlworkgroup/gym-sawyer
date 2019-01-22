@@ -1,0 +1,71 @@
+ARG PARENT_IMAGE=ubuntu:16.04
+FROM $PARENT_IMAGE
+
+# Build Source
+RUN ["/bin/bash", "-c", \
+ "source /opt/ros/kinetic/setup.bash && \
+  cd ~/ros_ws && \
+  catkin_make"]
+
+# Copy the modified intera script configured for ros-kinetic
+COPY intera.sh /root/ros_ws/intera.sh
+
+# Install and Build Sawyer Moveit Repo. Instructions obtained from:
+# http://sdk.rethinkrobotics.com/intera/MoveIt_Tutorial
+
+RUN ["/bin/bash", "-c", \
+  "cd ~/ros_ws/ && \
+  ./intera.sh && \
+  cd ~/ros_ws/src && \
+  wstool init . && \
+  wstool merge https://raw.githubusercontent.com/RethinkRobotics/sawyer_moveit/becef615db853e156b8444bb343127d99d97fddc/sawyer_moveit.rosinstall && \
+  wstool update && \
+  cd ~/ros_ws/ && \
+  source /opt/ros/kinetic/setup.bash && \
+  catkin_make"]
+
+# Install Pointgrey SDK Dependancies
+RUN DEBIAN_FRONTEND=noninteractive apt -y install \
+  libunwind-dev \
+  ros-kinetic-cv-bridge \
+  ros-kinetic-image-transport
+
+# Install Pointgrey SDK
+COPY spinnaker-1.13.0.31-amd64.tar.gz /tmp/
+RUN tar -xf /tmp/spinnaker-1.13.0.31-amd64.tar.gz -C /tmp
+WORKDIR /tmp/spinnaker-1.13.0.31-amd64
+RUN ./install_spinnaker.sh
+
+# Install ROS Drivers for Apriltag and PointGrey Camera 
+RUN ["/bin/bash", "-c", \
+  "cd ~/ros_ws/src && \ 
+  git clone https://github.com/dmalyuta/apriltags2_ros && \
+  git clone https://github.com/neufieldrobotics/spinnaker_sdk_camera_driver && \
+  cd ~/ros_ws/ && \
+  ./intera.sh && \
+  source /opt/ros/kinetic/setup.bash && \
+  catkin_make"]
+
+# TEMP
+RUN DEBIAN_FRONTEND=noninteractive apt -y install \
+  tmux \
+  vim
+
+# TEMP
+#COPY ./internal/temp/get_task_srv /root/ros_ws/src
+#RUN ["/bin/bash", "-c", \
+#  "cd ~/ros_ws/ && \
+#  ./intera.sh && \
+#  source /opt/ros/kinetic/setup.bash && \
+#  catkin_make --pkg get_task_srv"]
+
+COPY internal/apriltag_config.yaml /root/ros_ws/src/apriltags2_ros/apriltags2_ros/config/
+COPY internal/apriltag_pointgrey.launch /root/ros_ws/src/apriltags2_ros/apriltags2_ros/launch/
+COPY internal/pointgrey_params.yaml /root/ros_ws/src/spinnaker_sdk_camera_driver/params/
+COPY internal/pointgrey.launch /root/ros_ws/src/spinnaker_sdk_camera_driver/launch/
+COPY internal/pub_origin_tf.py /root/ros_ws/src/apriltags2_ros/apriltags2_ros/scripts/
+COPY internal/origin_detection.launch /root/
+COPY apriltag-entrypoint.sh /root/
+COPY sawyer-robot-apriltag.launch /root/
+
+ENTRYPOINT ["/root/apriltag-entrypoint.sh"]

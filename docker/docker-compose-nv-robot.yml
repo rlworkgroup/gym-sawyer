@@ -25,3 +25,10 @@ services:
       args:
         - PARENT_IMAGE=gym-sawyer/nvidia-ros-moveit
     image: gym-sawyer/nvidia-sawyer-robot
+  nvidia-robot-apriltag:
+    build:
+      context: ./sawyer-robot
+      dockerfile: Dockerfile.april
+      args:
+        - PARENT_IMAGE=gym-sawyer/nvidia-ros-moveit
+    image: gym-sawyer/nvidia-robot-apriltag

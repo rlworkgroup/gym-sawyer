@@ -9,7 +9,6 @@ import intera_interface
 import rospy
 from tf import TransformListener
 from copy import deepcopy
-from sawyer.ros.worlds import BlockWorld
 from get_task_srv.srv import get_task
 
 TASK = 0
@@ -94,7 +93,7 @@ class Runner:
         print("Going up")
         cb.approach(target_pose)
         
-        # Insert in lid
+        # Reach hole
         self.task += 1
         hole_frame = "hole"
         tf_listener.waitForTransform(robot_frame, hole_frame, rospy.Time(0), rospy.Duration(2))
@@ -114,6 +113,8 @@ class Runner:
         print("Going above hole")
         cb.approach(target_pose)
             
+        # Insert peg
+        self.task += 1
         print("Going down")
         target_pose.position.z -= 0.16
         cb.approach(target_pose)

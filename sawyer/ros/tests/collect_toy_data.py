@@ -4,33 +4,20 @@ import copy
 import sys
 
 from geometry_msgs.msg import Pose, Point
-import moveit_commander
 import intera_interface
 import rospy
 from sawyer.ros.worlds.toy_world import ToyWorld
-from sawyer.ros.robots import Sawyer
 from datetime import datetime
 import pickle
 from get_task_srv.srv import get_task
+import numpy as np
 
 def run():
-    moveit_commander.roscpp_initialize(sys.argv)
+    rospy.init_node('collect_toy_data', anonymous=True)
 
-    rospy.init_node('demo_toyworld', anonymous=True)
-
-    moveit_robot = moveit_commander.RobotCommander()
-    moveit_scene = moveit_commander.PlanningSceneInterface()
-    moveit_group_name = 'right_arm'
-    moveit_group = moveit_commander.MoveGroupCommander(moveit_group_name)
-    moveit_frame = moveit_robot.get_planning_frame()
     limb = intera_interface.Limb('right')
-
-    # Init Robot
-    robot = Sawyer(moveit_group)
-    robot.reset()
-
     # Init World
-    toyworld = ToyWorld(moveit_scene, moveit_frame, simulated=False)
+    toyworld = ToyWorld(None, None, simulated=False)
     toyworld.initialize()
     
     get_task_srv = rospy.ServiceProxy('get_task', get_task)
@@ -42,7 +29,19 @@ def run():
         try:
             task = get_task_srv().task
             print("Task: {0}".format(task))
-            obs = { 'timestamp': datetime.now(), 'task': task, **toyworld.get_observation(), **robot.get_observation() }
+
+            robot_obs = {
+                'gripper_position': np.array(limb.endpoint_pose()['position']),
+                'gripper_orientation': np.array(limb.endpoint_pose()['orientation']),
+                'gripper_lvel': np.array(limb.endpoint_velocity()['linear']),
+                'gripper_avel': np.array(limb.endpoint_velocity()['angular']),
+                'gripper_force': np.array(limb.endpoint_effort()['force']),
+                'gripper_torque': np.array(limb.endpoint_effort()['torque']),
+                'robot_joint_angles': np.array(list(limb.joint_angles().values())),
+                'robot_joint_velocities': np.array(list(limb.joint_velocities().values())),
+                'robot_joint_efforts': np.array(list(limb.joint_efforts().values()))
+            }
+            obs = { 'timestamp': datetime.now(), 'task': task, **toyworld.get_observation(), **robot_obs }
             observations.append(obs)
         except rospy.ServiceException as exc:
             print("Waiting for service")
