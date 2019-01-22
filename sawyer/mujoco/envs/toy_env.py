@@ -80,6 +80,7 @@ class ToyEnv(MujocoEnv, Serializable):
             self._task_list = task_list
         else:
             tasks = [
+                ReachTask,   # Reach above peg
                 PickTask,    # Pick up peg
                 ReachTask,   # Move peg above box
                 InsertTask,  # Insert peg into hole
@@ -95,8 +96,9 @@ class ToyEnv(MujocoEnv, Serializable):
                 # PlaceTask,   # Place peg back
                 ]
             task_args = [
+                {'location': [0.82, 0.265, 0.20]},
                 {'pick_object': 'peg'},
-                {'location': [0.65, 0., 0.]},
+                {'location': [0.66, 0.0, 0.25], 'grasp_object': 'peg'},
                 {'key_object': 'peg', 'lock_object': 'box_lid'},
                 {'box_object': 'box_base', 'lid_object': 'box_lid'},
                 {'key_object': 'peg', 'lock_object': 'box_lid'},
@@ -183,10 +185,10 @@ class ToyEnv(MujocoEnv, Serializable):
 
         # World obs
         world_obs = self._world.get_observation()
+        hole_site = self.sim.data.get_site_xpos('box_lid:hole')
 
         # Grasp state obs
         grasped_peg_obs = self.has_object('peg:head')
-        # has_block_obs = self.has_object('block:body')
 
         # Computing collision detection is expensive so cache the result
         in_collision = self.in_collision
@@ -198,7 +200,7 @@ class ToyEnv(MujocoEnv, Serializable):
             'gripper_position': self._robot.gripper_position,
             'gripper_state': self._robot.gripper_state,
             'grasped_peg': grasped_peg_obs,
-            # 'grasped_block': grasped_block_obs,
+            'hole_site': hole_site
         }
 
         r = self.compute_reward(obs, info)
