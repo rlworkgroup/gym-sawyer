@@ -85,24 +85,17 @@ class ToyEnv(MujocoEnv, Serializable):
                 ReachTask,   # Move peg above box
                 InsertTask,  # Insert peg into hole
                 OpenTask,    # Open box lid
-                RemoveTask,  # Remove peg from hole
-                PlaceTask,   # Place peg back
-                # PickTask,    # Pick up block
-                # PlaceTask,   # Place block into box
-                # PickTask,    # Pick up peg
-                # ReachTask,   # Move peg above box
-                # InsertTask,  # Insert peg into hole
                 # CloseTask,   # Close box lid
-                # PlaceTask,   # Place peg back
+                # RemoveTask,  # Remove peg from hole
+                # ReachTask,   # Move peg back
+                # PlaceTask,   # Place peg down
                 ]
             task_args = [
                 {'location': [0.82, 0.265, 0.20]},
                 {'pick_object': 'peg'},
                 {'location': [0.66, 0.0, 0.25], 'grasp_object': 'peg'},
                 {'key_object': 'peg', 'lock_object': 'box_lid'},
-                {'box_object': 'box_base', 'lid_object': 'box_lid'},
-                {'key_object': 'peg', 'lock_object': 'box_lid'},
-                {'place_object': 'peg', 'location': [0.65, 0., 0.]},
+                {'lid_object': 'box_lid', 'key_object': 'peg'},
             ]
             self._task_list = [task(**kwa) for task, kwa in
                                zip(tasks, task_args)]
@@ -186,6 +179,7 @@ class ToyEnv(MujocoEnv, Serializable):
         # World obs
         world_obs = self._world.get_observation()
         hole_site = self.sim.data.get_site_xpos('box_lid:hole')
+        lid_joint_state = self.sim.data.get_joint_qpos('box_lid:joint')
 
         # Grasp state obs
         grasped_peg_obs = self.has_object('peg:head')
@@ -200,7 +194,8 @@ class ToyEnv(MujocoEnv, Serializable):
             'gripper_position': self._robot.gripper_position,
             'gripper_state': self._robot.gripper_state,
             'grasped_peg': grasped_peg_obs,
-            'hole_site': hole_site
+            'hole_site': hole_site,
+            'lid_joint_state': lid_joint_state,
         }
 
         r = self.compute_reward(obs, info)

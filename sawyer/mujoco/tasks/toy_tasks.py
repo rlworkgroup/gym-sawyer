@@ -122,35 +122,34 @@ class OpenTask(ComposableTask):
     - Negative reward for releasing key object
     """
     def __init__(self,
-                 box_object,
                  lid_object,
+                 key_object,
+                 never_done=False,
                  success_thresh=0.05,
                  completion_bonus=0,
-                 c_dist=1,
-                 c_release=100):
-        self._box_object = box_object
+                 c_dist=10):
         self._lid_object = lid_object
+        self._key_object = key_object
+        self._never_done = never_done
         self._success_thresh = success_thresh
         self._completion_bonus = completion_bonus
         self._c_dist = c_dist
-        self._c_release = c_release
 
     def compute_reward(self, obs, info):
-        lid_pos = info['world_obs']['{}_position'.format(self._lid_object)]
-        box_pos = info['world_obs']['{}_position'.format(self._box_object)]
-        released = not info['grasped_{}'.format(self._key_object)]
-
-        lat_dist = np.linalg.norm(lid_pos[:2] - box_pos[:2])
-        return (-self._c_dist * (self._success_thresh - lat_dist) -
-                self._c_release * released)
-
-    def is_success(self, obs, info):
-        lid_pos = info['world_obs']['{}_position'.format(self._lid_object)]
-        box_pos = info['world_obs']['{}_position'.format(self._box_object)]
+        lid_joint_state = info['lid_joint_state']
         grasped = info['grasped_{}'.format(self._key_object)]
 
-        lat_dist = np.linalg.norm(lid_pos[:2] - box_pos[:2])
-        return grasped and lat_dist > self._success_thresh
+        r_jdist = np.linalg.norm(lid_joint_state) * self._c_dist
+        return int(grasped) * r_jdist
+
+    def is_success(self, obs, info):
+        if self._never_done:
+            return False
+        lid_joint_state = info['lid_joint_state']
+        grasped = info['grasped_{}'.format(self._key_object)]
+
+        jdist = np.linalg.norm(lid_joint_state)
+        return grasped and jdist > self._success_thresh
 
     @property
     def completion_bonus(self):
