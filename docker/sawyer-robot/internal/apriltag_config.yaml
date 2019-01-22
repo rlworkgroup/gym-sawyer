@@ -1,0 +1,63 @@
+# # Definitions of tags to detect
+#
+# ## General remarks
+#
+# - All length in meters
+# - Ellipsis (...) signifies that the previous element can be repeated multiple times.
+#
+# ## Standalone tag definitions
+# ### Remarks
+#
+# - name is optional
+#
+# ### Syntax
+#
+# standalone_tags:
+#   [
+#     {id: ID, size: SIZE, name: NAME},
+#     ...
+#   ]
+standalone_tags:
+  [
+    {id: 0, size: 0.066, name: origin},
+    {id: 5, size: 0.037, name: lid_at},
+    {id: 4, size: 0.037, name: box_at},
+  ]
+# ## Tag bundle definitions
+# ### Remarks
+#
+# - name is optional
+# - x, y, z have default values of 0 thus they are optional
+# - qw has default value of 1 and qx, qy, qz have default values of 0 thus they are optional
+#
+# ### Syntax
+#
+tag_bundles:
+  [
+    {
+      name: 'peg',
+      layout:
+        [
+          {id: 6, size: 0.037, x: 0.0000, y: 0.0000, z: 0.0000, qw: 1.0000, qx: 0.0000, qy: 0.0000, qz: 0.0000},
+          {id: 2, size: 0.037, x: -0.0002, y: -0.0327, z: -0.0217, qw: 0.6929, qx: 0.7210, qy: 0.0039, qz: -0.0121}
+        ]
+    }
+#     {
+#      name: 'hole',
+#      layout:
+#        [
+#          {id: 2, size: 0.03, x: 0.0000, y: 0.0000, z: 0.0000, qw: 1.0000, qx: 0.0000, qy: 0.0000, qz: 0.0000},
+#          {id: 5, size: 0.03, x: 0.0293, y: -0.0338, z: -0.0105, qw: 0.0002, qx: 0.0018, qy: 0.0005, qz: 1.0000}
+#        ]
+#     },
+#    {
+#      name: 'block',
+#      layout:
+#        [
+#          {id: 1, size: 0.07, x: 0.0000, y: 0.0000, z: 0.0000, qw: 1.0000, qx: 0.0000, qy: 0.0000, qz: 0.0000},
+#          {id: 3, size: 0.07, x: 0.0061, y: -0.0413, z: -0.0661, qw: 0.4851, qx: 0.5332, qy: 0.4953, qz: -0.4848},
+#          {id: 2, size: 0.07, x: 0.0051, y: 0.0574, z: -0.0498, qw: 0.0339, qx: 0.0100, qy: 0.7076, qz: 0.7057}
+#        ]
+#    }
+  ]
+

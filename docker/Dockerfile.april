@@ -1,0 +1,31 @@
+ARG PARENT_IMAGE=ubuntu:16.04
+FROM $PARENT_IMAGE
+
+# Install Pointgrey SDK Dependancies
+RUN DEBIAN_FRONTEND=noninteractive apt -y install \
+  libunwind-dev \
+  ros-kinetic-cv-bridge \
+  ros-kinetic-image-transport
+
+# Install Pointgrey SDK
+COPY spinnaker-1.13.0.31-amd64.tar.gz /tmp/
+RUN tar -xf /tmp/spinnaker-1.13.0.31-amd64.tar.gz -C /tmp
+WORKDIR /tmp/spinnaker-1.13.0.31-amd64
+RUN ./install_spinnaker.sh
+
+# Install ROS Drivers for Apriltag and PointGrey Camera 
+RUN ["/bin/bash", "-c", \
+  "cd ~/ros_ws/src && \ 
+  git clone https://github.com/dmalyuta/apriltags2_ros && \
+  git clone https://github.com/neufieldrobotics/spinnaker_sdk_camera_driver && \
+  cd ~/ros_ws/ && \
+  ./intera.sh && \
+  source /opt/ros/kinetic/setup.bash && \
+  catkin_make"]
+
+COPY internal/apriltag_config.yaml /root/ros_ws/src/apriltags2_ros/apriltags2_ros/config/
+COPY internal/apriltag_pointgrey.launch /root/ros_ws/src/apriltags2_ros/apriltags2_ros/launch/
+COPY internal/pointgrey_params.yaml /root/ros_ws/src/spinnaker_sdk_camera_driver/params/
+COPY internal/pointgrey.launch /root/ros_ws/src/spinnaker_sdk_camera_driver/launch/
+
+

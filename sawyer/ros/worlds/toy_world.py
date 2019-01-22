@@ -266,7 +266,8 @@ class ToyWorld(World):
         pose_stamped.pose.orientation.y = 0
         pose_stamped.pose.orientation.z = 0
         pose_stamped.pose.orientation.w = 1.0
-        self._moveit_scene.add_box('table', pose_stamped, (1.0, 0.9, 0.1))
+        if self._moveit_scene:
+            self._moveit_scene.add_box('table', pose_stamped, (1.0, 0.9, 0.1))
 
     def _gazebo_update_obj_states(self, data):
         model_states = data
@@ -325,7 +326,8 @@ class ToyWorld(World):
                 if ans.lower() == 'yes' or ans.lower() == 'y':
                     ready = True
 
-        self._moveit_scene.remove_world_object('table')
+        if self._moveit_scene:
+            self._moveit_scene.remove_world_object('table')
 
     def get_observation(self):
         if not self._simulated:
