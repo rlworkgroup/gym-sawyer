@@ -85,6 +85,9 @@ class WaypointSequencer:
 
             # Step env
             obs, rew, done, info = self._env.step(act)
+            print("task:{0}, reward: {1}".format(
+                self._env._task_list.index(self._env._active_task),
+                rew))
             if render:
                 self._env.render()
                 time.sleep(0.002)
