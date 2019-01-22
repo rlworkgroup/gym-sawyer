@@ -6,11 +6,12 @@ COPY . /root/code/gym-sawyer
 
 ENV PYTHONPATH=$PYTHONPATH:/root/code/gym-sawyer
 
-# TEMP
+# TEMP TODO: REMOVE BEFORE MERGING
 RUN DEBIAN_FRONTEND=noninteractive apt -y install \
   tmux \
   vim
 
+# TODO: REMOVE BEFORE MERGING
 COPY ./docker/sawyer-robot/intera.sh /root/ros_ws
 COPY ./docker/sawyer-robot/internal/temp/get_task_srv /root/ros_ws/src
 RUN /bin/bash -c 'cd /root/ros_ws/ && \

@@ -46,18 +46,20 @@ RUN ["/bin/bash", "-c", \
   source /opt/ros/kinetic/setup.bash && \
   catkin_make"]
 
-# TEMP
+# TEMP TODO: REMOVE BEFORE MERGING
 RUN DEBIAN_FRONTEND=noninteractive apt -y install \
   tmux \
   vim
 
-# TEMP
-#COPY ./internal/temp/get_task_srv /root/ros_ws/src
-#RUN ["/bin/bash", "-c", \
-#  "cd ~/ros_ws/ && \
-#  ./intera.sh && \
-#  source /opt/ros/kinetic/setup.bash && \
-#  catkin_make --pkg get_task_srv"]
+# TEMP TODO: REMOVE BEFORE MERGING
+RUN mkdir /root/ros_ws/src/get_task_srv
+COPY ./internal/temp/get_task_srv /root/ros_ws/src/get_task_srv
+
+RUN ["/bin/bash", "-c", \
+  "cd ~/ros_ws/ && \
+  ./intera.sh && \
+  source /opt/ros/kinetic/setup.bash && \
+  catkin_make --pkg get_task_srv"]
 
 COPY internal/apriltag_config.yaml /root/ros_ws/src/apriltags2_ros/apriltags2_ros/config/
 COPY internal/apriltag_pointgrey.launch /root/ros_ws/src/apriltags2_ros/apriltags2_ros/launch/
@@ -67,5 +69,10 @@ COPY internal/pub_origin_tf.py /root/ros_ws/src/apriltags2_ros/apriltags2_ros/sc
 COPY internal/origin_detection.launch /root/
 COPY apriltag-entrypoint.sh /root/
 COPY sawyer-robot-apriltag.launch /root/
+
+# TEMP TODO: REMOVE BEFORE MERGING
+RUN mkdir /root/data_collection
+RUN pwd
+COPY ./internal/temp/data_collection /root/data_collection
 
 ENTRYPOINT ["/root/apriltag-entrypoint.sh"]
