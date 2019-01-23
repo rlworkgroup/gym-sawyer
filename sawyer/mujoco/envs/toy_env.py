@@ -85,8 +85,8 @@ class ToyEnv(MujocoEnv, Serializable):
                 ReachTask,   # Move peg above box
                 InsertTask,  # Insert peg into hole
                 OpenTask,    # Open box lid
-                # CloseTask,   # Close box lid
-                # RemoveTask,  # Remove peg from hole
+                CloseTask,   # Close box lid
+                RemoveTask,  # Remove peg from hole
                 # ReachTask,   # Move peg back
                 # PlaceTask,   # Place peg down
                 ]
@@ -96,6 +96,8 @@ class ToyEnv(MujocoEnv, Serializable):
                 {'location': [0.66, 0.0, 0.25], 'grasp_object': 'peg'},
                 {'key_object': 'peg', 'lock_object': 'box_lid'},
                 {'lid_object': 'box_lid', 'key_object': 'peg'},
+                {'lid_object': 'box_lid', 'key_object': 'peg'},
+                {'key_object': 'peg', 'lock_object': 'box_lid'},
             ]
             self._task_list = [task(**kwa) for task, kwa in
                                zip(tasks, task_args)]
