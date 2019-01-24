@@ -39,7 +39,7 @@ COLLISION_WHITELIST = [
 ]
 
 class Sawyer(Robot):
-    GRIPPER_STATE_SCALE = 0.020833
+    GRIPPER_STATE_SCALE = 0.1
     INITIAL_JOINT_STATE = np.array([0., 0.,             # grippers
                                     -0.140923828125,    # j0
                                     -1.2789248046875,   # j1
