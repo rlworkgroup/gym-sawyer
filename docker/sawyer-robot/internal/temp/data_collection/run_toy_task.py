@@ -89,7 +89,7 @@ class Runner:
         self._cur_gripper_pose = Pose()
         self._cur_gripper_pose.position = hole_position
         self._cur_gripper_pose.position.z += 0.22
-        self._cur_gripper_pose.position.x -= 0.015
+        self._cur_gripper_pose.position.x -= 0.01
         #self._cur_gripper_pose.position.y -= 0.01
         self._cur_gripper_pose.orientation.x = 0
         self._cur_gripper_pose.orientation.y = 1
@@ -126,13 +126,22 @@ class Runner:
         self.robot.approach(self._cur_gripper_pose)
 
     def get_obs_0(self):
-        self.reach_peg() #0
-        self.pick_up_peg() #1
-        self.reach_box_lid() #2
-        self.insert_peg_in_lid() #3
-        self.open_lid() #4
-        self.close_lid() #5
-        self.remove_peg() #6      
+	usr_input = raw_input("Move arm manually. Type 'Done' when you are ready.").lower()
+	if usr_input == 'done':
+	    self.reach_peg() #0
+	    #usr_input = raw_input("Move arm manually. Type 'Done' when you are ready.").lower()
+	    #if usr_input == 'done':
+	    self.pick_up_peg() #1
+	    self.reach_box_lid() #2
+	    usr_input = raw_input("Move arm manually. Type 'Done' when you are ready.").lower()
+	    if usr_input == 'done':
+		self.insert_peg_in_lid() #3
+		usr_input = raw_input("Move arm manually. Type 'Done' when you are ready.").lower()
+		if usr_input == 'done':
+		    self.open_lid() #4
+		    self.close_lid() #5
+		    self.remove_peg() #6      
+
 
 if __name__ == '__main__':
     INITIAL_ROBOT_JOINT_POS = {
@@ -149,7 +158,11 @@ if __name__ == '__main__':
     
     robot = Robot()
     robot.move_to_start(start_angles=INITIAL_ROBOT_JOINT_POS)
-    
-    runner = Runner(robot)
-    rospy.Service('get_task', get_task, runner.handle_get_task)
-    runner.get_obs_0()
+    usr_input = raw_input("Type 'done' when you are ready.").lower()
+    if usr_input == 'done':
+	runner = Runner(robot)
+        print("Starting get_task service.")
+	rospy.Service('get_task', get_task, runner.handle_get_task)
+	runner.get_obs_0()
+    elif usr_input == 'exit':
+        sys.exit()
