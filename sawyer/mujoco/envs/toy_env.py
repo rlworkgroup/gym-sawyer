@@ -190,6 +190,7 @@ class ToyEnv(MujocoEnv, Serializable):
         in_collision = self.in_collision
         info = {
             'l': self._step,
+            'action': action,
             'in_collision': in_collision,
             'robot_obs': robot_obs,
             'world_obs': world_obs,

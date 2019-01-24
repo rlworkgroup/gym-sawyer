@@ -40,7 +40,7 @@ class PickTask(ComposableTask):
         dz_table2obj = np.linalg.norm(obj_pos[2] - self._obj_lift_target)
 
         r_dist = (1 - np.tanh(10. * d_grip2obj)) * self._c_dist
-        r_grasp = r_dist + int(grasped) * self._c_grasp
+        r_grasp = self._c_dist + int(grasped) * self._c_grasp
         r_lift = r_grasp + (1 - np.tanh(15. * dz_table2obj)) * (self._c_lift - self._c_grasp)
 
         return max(r_dist, r_grasp, r_lift)

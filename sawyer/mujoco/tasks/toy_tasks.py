@@ -21,45 +21,40 @@ class InsertTask(ComposableTask):
                  success_thresh=0.01,
                  target_z_pos=0.20,
                  completion_bonus=0,
-                 c_xydist=0.5,
-                 c_zdist=0.5):
+                 c_dist=0.1,
+                 c_grasp=0.9):
         self._key_object = key_object
         self._lock_object = lock_object
         self._never_done = never_done
         self._success_thresh = success_thresh
         self._target_z_pos = target_z_pos
         self._completion_bonus = completion_bonus
-        self._c_xydist = c_xydist
-        self._c_zdist = c_zdist
-
+        self._c_dist = c_dist
+        self._c_grasp = c_grasp
 
     def compute_reward(self, obs, info):
         key_pos = info['world_obs']['{}_position'.format(self._key_object)]
-        lock_pos = info['world_obs']['{}_position'.format(self._lock_object)]
         lock_site = info['hole_site']
         grasped = info['grasped_{}'.format(self._key_object)]
 
-        dxy_peg2hole = key_pos[:2] - lock_site[:2]
-        dz_peg = key_pos[2] - self._target_z_pos
+        target_pos = np.array([lock_site[0], lock_site[1], self._target_z_pos])
 
-        r_xydist = (1 - np.tanh(np.linalg.norm(dxy_peg2hole))) * self._c_xydist
-        r_zdist = (1 - np.tanh(np.linalg.norm(dz_peg))) * self._c_zdist
-        return int(grasped) * (r_xydist + r_zdist)
+        r_dist = -np.linalg.norm(target_pos - key_pos)
+        r_grasp = grasped * self._c_grasp
+        return r_dist + r_grasp
 
     def is_success(self, obs, info):
         if self._never_done:
             return False
         key_pos = info['world_obs']['{}_position'.format(self._key_object)]
-        lock_pos = info['world_obs']['{}_position'.format(self._lock_object)]
         lock_site = info['hole_site']
         grasped = info['grasped_{}'.format(self._key_object)]
 
-        dxy_peg2hole = key_pos[:2] - lock_site[:2]
-        dz_peg = key_pos[2] - self._target_z_pos
+        target_pos = np.array([lock_site[0], lock_site[1], self._target_z_pos])
 
+        r_dist = np.linalg.norm(target_pos - key_pos)
         return (grasped and
-            np.linalg.norm(dxy_peg2hole) < self._success_thresh and
-            np.linalg.norm(dz_peg) < self._success_thresh)
+            np.linalg.norm(target_pos - key_pos) < self._success_thresh)
 
     @property
     def completion_bonus(self):
@@ -84,48 +79,45 @@ class RemoveTask(ComposableTask):
                  success_thresh=0.01,
                  target_z_pos=0.35,
                  completion_bonus=0,
-                 c_xydist=0.5,
-                 c_zdist=0.5):
+                 c_dist=0.1,
+                 c_grasp=0.9):
         self._key_object = key_object
         self._lock_object = lock_object
         self._never_done = never_done
         self._success_thresh = success_thresh
         self._target_z_pos = target_z_pos
         self._completion_bonus = completion_bonus
-        self._c_xydist = c_xydist
-        self._c_zdist = c_zdist
+        self._c_dist = c_dist
+        self._c_grasp = c_grasp
 
     def compute_reward(self, obs, info):
         key_pos = info['world_obs']['{}_position'.format(self._key_object)]
-        lock_pos = info['world_obs']['{}_position'.format(self._lock_object)]
         lock_site = info['hole_site']
         grasped = info['grasped_{}'.format(self._key_object)]
 
-        dxy_peg2hole = key_pos[:2] - lock_site[:2]
-        dz_peg = key_pos[2] - self._target_z_pos
+        target_pos = np.array([lock_site[0], lock_site[1], self._target_z_pos])
 
-        r_xydist = (1 - np.tanh(np.linalg.norm(dxy_peg2hole))) * self._c_xydist
-        r_zdist = (1 - np.tanh(np.linalg.norm(dz_peg))) * self._c_zdist
-        return int(grasped) * (r_xydist + r_zdist)
+        r_dist = -np.linalg.norm(target_pos - key_pos)
+        r_grasp = grasped * self._c_grasp
+        return r_dist + r_grasp
 
     def is_success(self, obs, info):
         if self._never_done:
             return False
         key_pos = info['world_obs']['{}_position'.format(self._key_object)]
-        lock_pos = info['world_obs']['{}_position'.format(self._lock_object)]
         lock_site = info['hole_site']
         grasped = info['grasped_{}'.format(self._key_object)]
 
-        dxy_peg2hole = key_pos[:2] - lock_site[:2]
-        dz_peg = key_pos[2] - self._target_z_pos
+        target_pos = np.array([lock_site[0], lock_site[1], self._target_z_pos])
 
+        r_dist = np.linalg.norm(target_pos - key_pos)
         return (grasped and
-            np.linalg.norm(dxy_peg2hole) < self._success_thresh and
-            np.linalg.norm(dz_peg) < self._success_thresh)
+            np.linalg.norm(target_pos - key_pos) < self._success_thresh)
 
     @property
     def completion_bonus(self):
         return self._completion_bonus
+
 
 class OpenTask(ComposableTask):
     """
@@ -144,15 +136,15 @@ class OpenTask(ComposableTask):
                  success_thresh=0.01,
                  target_lid_jpos=-0.05,
                  completion_bonus=0,
-                 c_dist=0.5,
-                 c_xydist=0.5):
+                 c_jdist=0.2,
+                 c_xydist=0.8):
         self._lid_object = lid_object
         self._key_object = key_object
         self._never_done = never_done
         self._success_thresh = success_thresh
         self._target_lid_jpos = target_lid_jpos
         self._completion_bonus = completion_bonus
-        self._c_dist = c_dist
+        self._c_jdist = c_jdist
         self._c_xydist = c_xydist
 
     def compute_reward(self, obs, info):
@@ -163,18 +155,22 @@ class OpenTask(ComposableTask):
 
         dxy_peg2hole = key_pos[:2] - lock_site[:2]
 
-        r_jdist = (1 - np.tanh(10. * np.abs(lid_joint_state - self._target_lid_jpos))) * self._c_dist
+        r_jdist = (1 - np.tanh(10. * np.abs(lid_joint_state - self._target_lid_jpos))) * 0.2
         r_peg2hole = (1 - np.tanh(np.linalg.norm(dxy_peg2hole))) * self._c_xydist
         return int(grasped) * (r_jdist + r_peg2hole)
 
     def is_success(self, obs, info):
         if self._never_done:
             return False
+        key_pos = info['world_obs']['{}_position'.format(self._key_object)]
         lid_joint_state = info['lid_joint_state']
+        lock_site = info['hole_site']
         grasped = info['grasped_{}'.format(self._key_object)]
 
+        dxy_peg2hole = key_pos[:2] - lock_site[:2]
+
         return (grasped and
-            np.linalg.norm(dxy_peg2hole) < self._success_thresh,
+            np.linalg.norm(dxy_peg2hole) < self._success_thresh and
             lid_joint_state <= self._target_lid_jpos)
 
     @property
@@ -197,16 +193,17 @@ class CloseTask(ComposableTask):
                  key_object,
                  never_done=False,
                  success_thresh=0.01,
-                 target_lid_jpos=-0.001,
+                 target_lid_jpos=-0.05,
                  completion_bonus=0,
-                 c_dist=10):
+                 c_jdist=0.2,
+                 c_xydist=0.8):
         self._lid_object = lid_object
         self._key_object = key_object
         self._never_done = never_done
         self._success_thresh = success_thresh
         self._target_lid_jpos = target_lid_jpos
         self._completion_bonus = completion_bonus
-        self._c_dist = c_dist
+        self._c_jdist = c_jdist
         self._c_xydist = c_xydist
 
     def compute_reward(self, obs, info):
@@ -217,18 +214,22 @@ class CloseTask(ComposableTask):
 
         dxy_peg2hole = key_pos[:2] - lock_site[:2]
 
-        r_jdist = (1 - np.tanh(10. * np.abs(lid_joint_state - self._target_lid_jpos))) * self._c_dist
+        r_jdist = (1 - np.tanh(10. * np.abs(lid_joint_state - self._target_lid_jpos))) * self._c_jdist
         r_peg2hole = (1 - np.tanh(np.linalg.norm(dxy_peg2hole))) * self._c_xydist
         return int(grasped) * (r_jdist + r_peg2hole)
 
     def is_success(self, obs, info):
         if self._never_done:
             return False
+        key_pos = info['world_obs']['{}_position'.format(self._key_object)]
         lid_joint_state = info['lid_joint_state']
+        lock_site = info['hole_site']
         grasped = info['grasped_{}'.format(self._key_object)]
 
+        dxy_peg2hole = key_pos[:2] - lock_site[:2]
+
         return (grasped and
-            np.linalg.norm(dxy_peg2hole) < self._success_thresh,
+            np.linalg.norm(dxy_peg2hole) < self._success_thresh and
             lid_joint_state >= self._target_lid_jpos)
 
     @property
