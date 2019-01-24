@@ -60,7 +60,7 @@ class TaskSpaceSawyer(Sawyer):
         # Does not update the MuJoCo env entirely, just the Robot state
         reset_mocap2body_xpos(self._env.sim)
         self._env.sim.data.mocap_pos[0, :3] = self._env.sim.data.mocap_pos[0, :3] + action[:3]
-        self._env.sim.data.mocap_quat[:] = np.array([0, 0, 1, 0])
+        self._env.sim.data.mocap_quat[0, :] = np.array([0, 0, 1, 0])
         self.gripper_state = action[3]
         for _ in range(5):
             self._env.sim.step()
