@@ -11,8 +11,9 @@ from sawyer.garage.envs.mujoco.mujoco_env import MODEL_DIR
 from sawyer.garage.misc.overrides import overrides
 from sawyer.mujoco.robots import PositionSpaceSawyer, TaskSpaceSawyer
 from sawyer.mujoco.robots.sawyer import COLLISION_WHITELIST
-from sawyer.mujoco.tasks import (ReachTask, PickTask, PlaceTask, InsertTask,
-                                 RemoveTask, OpenTask, CloseTask)
+from sawyer.mujoco.tasks import (ReachTask, ReachWithGraspTask, PickTask,
+                                 PlaceTask, InsertTask, RemoveTask, OpenTask,
+                                 CloseTask)
 from sawyer.mujoco.worlds import ToyWorld
 
 
@@ -91,7 +92,7 @@ class ToyEnv(MujocoEnv, Serializable):
             tasks = [
                 ReachTask,   # Reach above peg
                 PickTask,    # Pick up peg
-                ReachTask,   # Move peg above box
+                ReachWithGraspTask,   # Move peg above box
                 InsertTask,  # Insert peg into hole
                 OpenTask,    # Open box lid
                 CloseTask,   # Close box lid

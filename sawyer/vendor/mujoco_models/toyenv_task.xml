@@ -1,5 +1,5 @@
 <mujoco>
-  <size nconmax="200" />
+  <size nconmax="1000" />
   <compiler angle="radian" meshdir="meshes/" />
   <asset>
     <include file="shared_assets.xml"></include>
