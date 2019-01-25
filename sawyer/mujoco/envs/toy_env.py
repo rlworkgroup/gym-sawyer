@@ -28,6 +28,10 @@ TOYENV_COLLISION_WHITELIST = COLLISION_WHITELIST + [
     # Need to whitelist peg with box
     ("box_base", "peg"),
     ("box_lid", "peg"),
+
+    # Need to whitelist peg with gripper tips
+    ("r_gripper_l_finger_tip", "peg"),
+    ("r_gripper_r_finger_tip", "peg"),
 ]
 
 
@@ -45,6 +49,7 @@ class ToyEnv(MujocoEnv, Serializable):
                  collision_penalty=0.,
                  terminate_on_collision=False,
                  randomize_start_jpos=False,
+                 use_sticky_grasp=True,
                  collision_whitelist=TOYENV_COLLISION_WHITELIST,
                  **kwargs):
 
@@ -59,6 +64,10 @@ class ToyEnv(MujocoEnv, Serializable):
         self._collision_penalty = collision_penalty
         self._terminate_on_collision = terminate_on_collision
         self._randomize_start_jpos = randomize_start_jpos
+        self._use_sticky_grasp = use_sticky_grasp
+        self._sticky_grasp = False
+        self._sticky_xpos = None
+        self._sticky_xquat = None
 
         #TODO: Dynamically specify the Robot and World with dm_control.mjcf
         # default config: Position control + 1 box w/ lid and 1 peg
@@ -145,6 +154,11 @@ class ToyEnv(MujocoEnv, Serializable):
         self._step = 0
         self._active_task = self._task_list[0]
 
+        # Reset sticky grasp
+        self._sticky_grasp = False
+        self._sticky_xpos = None
+        self._sticky_xquat = None
+
         super(ToyEnv, self).reset()
         self._robot.reset()
         self._world.reset()
@@ -184,10 +198,37 @@ class ToyEnv(MujocoEnv, Serializable):
         lid_joint_state = self.sim.data.get_joint_qpos('box_lid:joint')
 
         # Grasp state obs
-        grasped_peg_obs = self.has_object('peg:head')
+        grasped_peg_obs = self.has_peg()
+
+        # Sticky grasp
+        if self._use_sticky_grasp:
+            peg_xpos = self.sim.data.get_body_xpos('peg')
+            peg_xquat = self.sim.data.get_body_xquat('peg')
+            gripper_xpos = self.sim.data.get_body_xpos('r_gripper_r_finger_tip')
+            gripper_xquat = self.sim.data.get_body_xquat('r_gripper_r_finger_tip')
+            dz_gripper2peg = np.abs(peg_xpos[2] - gripper_xpos[2])
+
+            # Latch on/off sticky grasp
+            if (not self._sticky_grasp and grasped_peg_obs and
+                dz_gripper2peg > 0.005 and dz_gripper2peg < 0.055):
+                self._sticky_grasp = True
+                self._sticky_xquat = peg_xquat
+                self._sticky_xpos = peg_xpos - gripper_xpos
+            elif self._sticky_grasp and not grasped_peg_obs:
+                self._sticky_grasp = False
+                self._sticky_xquat = None
+                self._sticky_xpos = None
+
+            # Glue peg to gripper
+            if self._sticky_grasp:
+                sticky_qpos = np.concatenate(
+                    (gripper_xpos + self._sticky_xpos, self._sticky_xquat),
+                    axis=-1)
+                self.sim.data.set_joint_qpos('peg:joint', sticky_qpos)
 
         # Computing collision detection is expensive so cache the result
         in_collision = self.in_collision
+
         info = {
             'l': self._step,
             'action': action,
@@ -286,6 +327,27 @@ class ToyEnv(MujocoEnv, Serializable):
             return True
         else:
             return False
+
+    def has_peg(self):
+        contacts = tuple()
+        finger_id_1 = self.sim.model.geom_name2id('finger_tip_1')
+        finger_id_2 = self.sim.model.geom_name2id('finger_tip_2')
+        for coni in range(self.sim.data.ncon):
+            con = self.sim.data.contact[coni]
+            # Order contact pairs s.t. finger tips are first value
+            if con.geom1 == finger_id_1 or con.geom1 == finger_id_2:
+                contacts += ((con.geom1, con.geom2), )
+            else:
+                contacts += ((con.geom2, con.geom1), )
+
+        peg_ids = [self.sim.model.geom_name2id('peg:b{}'.format(i+1))
+            for i in range(4)]
+        for fa, fb in ((finger_id_1, finger_id_2), (finger_id_2, finger_id_1)):
+            for pa, pb in ((peg_ids[0], peg_ids[1]), (peg_ids[1], peg_ids[0]),
+                           (peg_ids[2], peg_ids[3]), (peg_ids[3], peg_ids[2])):
+                if (fa, pa) in contacts and (fb, pb) in contacts:
+                    return True
+        return False
 
     def next_task(self):
         # Set up env to for next task in sequence
