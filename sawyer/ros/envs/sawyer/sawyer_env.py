@@ -2,10 +2,10 @@ from sawyer.ros.envs.ros_env import RosEnv
 from sawyer.ros.util.common import rate_limited
 from sawyer.garage.envs.base import Step
 try:
-    from sawyer.garage.config import STEP_FREQ
+    from sawyer.config import STEP_FREQ
 except ImportError:
     raise NotImplementedError(
-        "Please set STEP_FREQ in sawyer.garage.config_personal.py!"
+        "Please set STEP_FREQ in sawyer.config_personal.py!"
         "example 1: "
         "   STEP_FREQ = 5")
 

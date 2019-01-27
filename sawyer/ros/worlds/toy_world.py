@@ -15,8 +15,9 @@ import sawyer.garage.misc.logger as logger
 class BoxWithLid:    
 
     class Lid:
-        def __init__(self, name, initial_pos):
+        def __init__(self, name, initial_pos, hole_name):
             self._name = name
+            self._hole_name = hole_name
             self._initial_pos = Point(
                 x=initial_pos[0], y=initial_pos[1], z=initial_pos[2])
             self._position = Point(
@@ -26,6 +27,10 @@ class BoxWithLid:
         @property
         def name(self):
             return self._name
+
+        @property
+        def hole_name(self):
+            return self._hole_name
 
         @property
         def position(self):
@@ -43,14 +48,14 @@ class BoxWithLid:
         def orientation(self, value):
             self._orientation = value 
 
-    def __init__(self, name, init_pos, lid_name, lid_init_pos, random_delta_range, resource=None):
+    def __init__(self, name, init_pos, lid_name, lid_init_pos, hole_name, random_delta_range, resource=None):
         self._name = name
         self._resource = resource                 
         self._initial_pos = Point(x=init_pos[0], y=init_pos[1], z=init_pos[2])
         self._random_delta_range = random_delta_range         
         self._position = Point(x=init_pos[0], y=init_pos[1], z=init_pos[2])
         self._orientation = Quaternion(x=0., y=0., z=0., w=1.)        
-        self._lid = self.Lid(lid_name, lid_init_pos)
+        self._lid = self.Lid(lid_name, lid_init_pos, hole_name)
 
     @property
     def random_delta_range(self):
@@ -215,11 +220,14 @@ class ToyWorld(World):
             # Box with Lid
             Gazebo.load_gazebo_model(
                 'box',
-                Pose(position=Point(x=0.5725, y=0.1265, z=0.90)),
+                Pose(position=Point(x=0.756, y=-0.042, z=0.007)),
                 osp.join(World.MODEL_DIR, 'box_with_lid/model.urdf'))
             box = BoxWithLid(
                 name='box',
-                init_pos=(0.5725, 0.1265, 0.90),
+                init_pos=(0.756, -0.042, 0.007),
+                lid_name='lid',
+                lid_init_pos=(0.751, -0.037, 0.130),
+                hole_name='hole',                
                 random_delta_range=0,
                 resource=osp.join(World.MODEL_DIR, 'box_with_lid/model.urdf'))
             self._box = box
@@ -227,11 +235,11 @@ class ToyWorld(World):
             # Block Peg
             Gazebo.load_gazebo_model(
                 'peg',
-                Pose(position=Point(x=0.5725, y=0.1265, z=0.90)),
+                Pose(position=Point(x=0.793, y=0.293, z=0.092)),
                 osp.join(World.MODEL_DIR, 'peg/model.urdf'))
             peg = BlockPeg(
                 name='peg',
-                initial_pos=(0.5725, 0.1265, 0.90),
+                initial_pos=(0.793, 0.293, 0.092),
                 random_delta_range=0,
                 resource=osp.join(World.MODEL_DIR, 'block_peg/model.urdf'))
             self._peg = peg
@@ -244,13 +252,14 @@ class ToyWorld(World):
             self._tf_listener = TransformListener()
             box_name = 'box'
             lid_name = 'lid'
+            peg_name = 'peg'
+            hole_name = 'hole'
             box_init_pos, _ = self.get_box_location(box_name)
-            lid_init_pos, _ = self.get_lid_location(lid_name)
-            box = BoxWithLid(box_name, box_init_pos, lid_name, lid_init_pos, 
+            lid_init_pos, _ = self.get_lid_location(lid_name)            
+            box = BoxWithLid(box_name, box_init_pos, lid_name, lid_init_pos, hole_name, 
                     random_delta_range=0)
             self._box = box
 
-            peg_name = 'peg'
             peg_init_pos, _ = self.get_peg_location(peg_name)               
             peg = BlockPeg(name=peg_name, init_pos=peg_init_pos, random_delta_range=0)
             self._peg = peg
@@ -332,16 +341,16 @@ class ToyWorld(World):
     def get_observation(self):
         if not self._simulated:
             #Update box and lid positions using apriltags
-                        box_pos, box_ori = self.get_box_location(self._box.name)
+                        box_pos, box_ori = self.get_box_location()
                         self._box.position = Point(x=box_pos[0], y=box_pos[1], z=box_pos[2])
                         self._box.orientation = Quaternion(x=box_ori[0], y=box_ori[1], z=box_ori[2], w=box_ori[3])
                         
-                        lid_pos, lid_ori = self.get_lid_location(self._box.lid.name)
+                        lid_pos, lid_ori = self.get_lid_location()
                         self._box.lid.position = Point(x=lid_pos[0], y=lid_pos[1], z=lid_pos[2])
                         self._box.lid.orientation = Quaternion(x=lid_ori[0], y=lid_ori[1], z=lid_ori[2], w=lid_ori[3])
 
             #Update peg position using apriltags
-                        peg_pos, peg_ori = self.get_peg_location(self._peg.name)
+                        peg_pos, peg_ori = self.get_peg_location()
                         self._peg.position = Point(x=peg_pos[0], y=peg_pos[1], z=peg_pos[2])
                         self._peg.orientation = Quaternion(x=peg_ori[0], y=peg_ori[1], z=peg_ori[2], w=peg_ori[3])
 
@@ -352,9 +361,11 @@ class ToyWorld(World):
             obs = {**obs, **obj.get_observation()}
         return obs
 
-    def get_box_location(self, box_frame):
+    def get_box_location(self, box_frame=None):
         box_pos = None
         box_ori = None
+        if box_frame is None:
+            box_frame = self._box.name
 
         #Wait for transform base -> box
         self._tf_listener.waitForTransform(
@@ -365,9 +376,11 @@ class ToyWorld(World):
         
         return box_pos, box_ori
 
-    def get_lid_location(self, lid_frame):        
+    def get_lid_location(self, lid_frame=None):        
         lid_pos = None
         lid_ori = None
+        if lid_frame is None:
+            lid_frame = self._box.lid.name
 
         #Wait for transform base -> lid
         self._tf_listener.waitForTransform(
@@ -377,9 +390,11 @@ class ToyWorld(World):
             self._base_frame, lid_frame, rospy.Time(0))
         return lid_pos, lid_ori
 
-    def get_peg_location(self, peg_frame):        
+    def get_peg_location(self, peg_frame=None):        
         peg_pos = None
         peg_ori = None
+        if peg_frame is None:
+            peg_frame = self._peg.name
         
         #Wait for transform base -> peg
         self._tf_listener.waitForTransform(
@@ -389,6 +404,16 @@ class ToyWorld(World):
             self._base_frame, peg_frame, rospy.Time(0))
 
         return peg_pos, peg_ori
+
+    def get_lid_hole_location(self, hole_frame=None):
+        if hole_frame is None:
+            hole_frame = self._box.lid.hole_name
+        self._tf_listener.waitForTransform(
+            self._base_frame, hole_frame, rospy.Time(0), rospy.Duration(2))        
+        hole_pos, hole_ori = self._tf_listener.lookupTransform(
+            self._base_frame, hole_frame, rospy.Time(0))
+        
+        return hole_pos, hole_ori
 
     @property
     def observation_space(self):

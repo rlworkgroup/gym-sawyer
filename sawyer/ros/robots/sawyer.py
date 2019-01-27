@@ -84,6 +84,9 @@ class Sawyer(Robot):
         result = self._sv.get_state_validity(rs, self._moveit_group)
         return result.valid
 
+    def in_collision_state(self):
+        return self._limb.has_collided()
+
     @property
     def enabled(self):
         """
@@ -93,34 +96,6 @@ class Sawyer(Robot):
         """
         return intera_interface.RobotEnable(
             intera_interface.CHECK_VERSION).state().enabled
-
-    def _set_limb_joint_positions(self, joint_angle_cmds):
-        # limit joint angles cmd
-        current_joint_angles = self._limb.joint_angles()
-        for joint in joint_angle_cmds:
-            joint_cmd_delta = joint_angle_cmds[joint] - \
-                              current_joint_angles[joint]
-            joint_angle_cmds[
-                joint] = current_joint_angles[joint] + joint_cmd_delta * 0.1
-
-        if self.safety_predict(joint_angle_cmds):
-            self._limb.set_joint_positions(joint_angle_cmds)
-
-    def _set_limb_joint_velocities(self, joint_angle_cmds):
-        self._limb.set_joint_velocities(joint_angle_cmds)
-
-    def _set_limb_joint_torques(self, joint_angle_cmds):
-        self._limb.set_joint_torques(joint_angle_cmds)
-
-    def _set_gripper_position(self, position):
-        self._gripper.set_position(position)
-
-    def _move_to_start_position(self):
-        if rospy.is_shutdown():
-            return
-        self._limb.move_to_joint_positions(self._initial_joint_pos)
-        self._gripper.open()
-        rospy.sleep(1.0)
 
     def reset(self):
         """Reset sawyer."""
@@ -133,8 +108,8 @@ class Sawyer(Robot):
         :return: robot observation
         """
         return {
-            'gripper_position': np.array(self._limb.endpoint_pose()['position']),
-            'gripper_orientation': np.array(self._limb.endpoint_pose()['orientation']),
+            'gripper_position': np.array(self.gripper_pose['position']),
+            'gripper_orientation': np.array(self.gripper_pose['orientation']),
             'gripper_lvel': np.array(self._limb.endpoint_velocity()['linear']),
             'gripper_avel': np.array(self._limb.endpoint_velocity()['angular']),
             'gripper_force': np.array(self._limb.endpoint_effort()['force']),
@@ -180,7 +155,7 @@ class Sawyer(Robot):
         elif self._control_mode == 'effort':
             self._set_limb_joint_torques(joint_commands)
 
-        self._set_gripper_position(commands[7])
+        self._set_gripper_state(commands[7])
 
     @property
     def gripper_pose(self):
@@ -228,3 +203,36 @@ class Sawyer(Robot):
             np.concatenate((lower_bounds, np.array([0]))),
             np.concatenate((upper_bounds, np.array([100]))),
             dtype=np.float32)
+
+    @property
+    def gripper_state(self):
+        ori_position = self._gripper.get_position()
+        return ori_position - 0.020833
+
+    def _set_limb_joint_positions(self, joint_angle_cmds):
+        # limit joint angles cmd
+        current_joint_angles = self._limb.joint_angles()
+        for joint in joint_angle_cmds:
+            joint_cmd_delta = joint_angle_cmds[joint] - \
+                              current_joint_angles[joint]
+            joint_angle_cmds[
+                joint] = current_joint_angles[joint] + joint_cmd_delta * 0.1
+
+        if self.safety_predict(joint_angle_cmds):
+            self._limb.set_joint_positions(joint_angle_cmds)
+
+    def _set_limb_joint_velocities(self, joint_angle_cmds):
+        self._limb.set_joint_velocities(joint_angle_cmds)
+
+    def _set_limb_joint_torques(self, joint_angle_cmds):
+        self._limb.set_joint_torques(joint_angle_cmds)
+
+    def _set_gripper_state(self, position):
+        self._gripper.set_position(position)
+
+    def _move_to_start_position(self):
+        if rospy.is_shutdown():
+            return
+        self._limb.move_to_joint_positions(self._initial_joint_pos)
+        self._gripper.close()
+        rospy.sleep(1.0)

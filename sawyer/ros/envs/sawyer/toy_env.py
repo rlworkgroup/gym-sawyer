@@ -1,5 +1,6 @@
 """ToyEnv task for the Sawyer robot."""
 
+import sys
 import gym
 import moveit_commander
 import numpy as np
@@ -8,33 +9,32 @@ from sawyer.mujoco.tasks import (ReachTask, PickTask, PlaceTask, InsertTask,
                                  RemoveTask, OpenTask, CloseTask)
 from sawyer.ros.envs.sawyer.sawyer_env import SawyerEnv
 from sawyer.ros.robots.sawyer import Sawyer
-from sawyer.ros.worlds.block_world import ToyWorld
+from sawyer.ros.worlds.toy_world import ToyWorld
 from sawyer.garage.core import Serializable
+from sawyer.ros.util.common import rate_limited
 try:
-    from sawyer.garage.config import STEP_FREQ
+    from sawyer.config import STEP_FREQ
 except ImportError:
     raise NotImplementedError(
-        "Please set STEP_FREQ in sawyer.garage.config_personal.py!"
+        "Please set STEP_FREQ in sawyer.config_personal.py!"
         "example 1: "
         "   STEP_FREQ = 5")
 
 class ToyEnv(SawyerEnv, Serializable):
-    def __init__(self):
+    def __init__(self, simulated=False, task_list=None):
         Serializable.quick_init(self, locals())
 
         self.simulated = simulated
 
         # Initialize moveit to get safety check
+        moveit_commander.roscpp_initialize(sys.argv)
         self._moveit_robot = moveit_commander.RobotCommander()
         self._moveit_scene = moveit_commander.PlanningSceneInterface()
         self._moveit_group_name = 'right_arm'
         self._moveit_group = moveit_commander.MoveGroupCommander(
             self._moveit_group_name)
 
-        self._robot = Sawyer(
-            initial_joint_pos=initial_joint_pos,
-            control_mode=robot_control_mode,
-            moveit_group=self._moveit_group_name)
+        self._robot = Sawyer(moveit_group=self._moveit_group_name)
         self._world = ToyWorld(self._moveit_scene,
                                self._moveit_robot.get_planning_frame(),
                                simulated)
@@ -61,7 +61,7 @@ class ToyEnv(SawyerEnv, Serializable):
                 {'pick_object': 'peg'},
                 {'location': [0.65, 0., 0.]},
                 {'key_object': 'peg', 'lock_object': 'box_lid'},
-                {'box_object': 'box_base', 'lid_object': 'box_lid'},
+                {'key_object': 'peg', 'lid_object': 'box_lid'},
                 {'key_object': 'peg', 'lock_object': 'box_lid'},
                 {'place_object': 'peg', 'location': [0.65, 0., 0.]},
             ]
@@ -83,24 +83,37 @@ class ToyEnv(SawyerEnv, Serializable):
 
     @rate_limited(STEP_FREQ)
     def step(self, action):
+        assert action.shape == self.action_space.shape
+
+        # Do the action
         self._robot.send_command(action)
-        obs = self.get_observation
+
+        self._step += 1
+        obs = self.get_observation()
 
         # Robot obs
         robot_obs = self._robot.get_observation()
 
         # World obs
         world_obs = self._world.get_observation()
+        hole_pose, _ = self._world.get_lid_hole_location()
 
-        #TODO: Get collision state (safety_check?)
+        # Grasp state obs
+        grasped_peg_obs = self.has_peg()
+        
+        in_collision = self._robot.in_collision_state
+
         info = {
             'l': self._step,
+            'action': action,
             'in_collision': in_collision,
             'robot_obs': robot_obs,
             'world_obs': world_obs,
-            'gripper_position': self._robot.gripper_pose,
-            # 'gripper_state': self._robot.gripper_state,
+            'gripper_position': self._robot.gripper_pose['position'],
+            'gripper_state': self._robot.gripper_state,
             'grasped_peg': grasped_peg_obs,
+            'hole_site': hole_pose,
+            'lid_joint_state': lid_joint_state,
         }
 
         r = self.compute_reward(obs, info)
@@ -122,13 +135,14 @@ class ToyEnv(SawyerEnv, Serializable):
                 done = True
                 successful = False
 
-        info["r"] = r
-        info["d"] = done
-        info["is_success"] = successful
+        info['r'] = r
+        info['d'] = done
+        info['is_success'] = successful
 
         return obs, r, done, info
 
     def reset(self):
+        self._step = 0
         self._robot.reset()
         self._world.reset()
 
@@ -187,6 +201,19 @@ class ToyEnv(SawyerEnv, Serializable):
 
     def compute_reward(self, obs, info):
         return self._active_task.compute_reward()
+
+    def has_peg(self):
+        gripper_state = self._robot.gripper_state
+        if gripper_state != 0.0:
+            return False
+
+        peg_pose, _ = self._world.get_peg_location()
+        gripper_pose = self._robot.gripper_pose['position']
+        max_xy_diff = 0.02
+        max_z_diff = 0.2
+        return ( abs(peg_pose[0] - gripper_pose.x) < max_xy_diff and
+            abs(peg_pose[1] - gripper_pose.y) < max_xy_diff and
+            abs(peg_pose[2] - gripper_pose.z) < max_z_diff )
 
     @property
     def goal(self):
