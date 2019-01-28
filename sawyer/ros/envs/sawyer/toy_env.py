@@ -21,11 +21,18 @@ except ImportError:
         "   STEP_FREQ = 5")
 
 class ToyEnv(SawyerEnv, Serializable):
-    def __init__(self, simulated=False, task_list=None):
+    def __init__(self, 
+                 simulated=False, 
+                 task_list=None,
+                 collision_penalty=0.,
+                 terminate_on_collision=False):
         Serializable.quick_init(self, locals())
 
         self.simulated = simulated
-
+        self._step = 0
+        self._collision_penalty = collision_penalty
+        self._terminate_on_collision = terminate_on_collision
+        
         # Initialize moveit to get safety check
         moveit_commander.roscpp_initialize(sys.argv)
         self._moveit_robot = moveit_commander.RobotCommander()
@@ -87,7 +94,6 @@ class ToyEnv(SawyerEnv, Serializable):
 
         # Do the action
         self._robot.send_command(action)
-
         self._step += 1
         obs = self.get_observation()
 
@@ -97,6 +103,7 @@ class ToyEnv(SawyerEnv, Serializable):
         # World obs
         world_obs = self._world.get_observation()
         hole_pose, _ = self._world.get_lid_hole_location()
+        lid_pose = world_obs['box_lid_position']
 
         # Grasp state obs
         grasped_peg_obs = self.has_peg()
@@ -113,7 +120,7 @@ class ToyEnv(SawyerEnv, Serializable):
             'gripper_state': self._robot.gripper_state,
             'grasped_peg': grasped_peg_obs,
             'hole_site': hole_pose,
-            'lid_joint_state': lid_joint_state,
+            'lid_joint_state': lid_pose,
         }
 
         r = self.compute_reward(obs, info)
@@ -138,11 +145,12 @@ class ToyEnv(SawyerEnv, Serializable):
         info['r'] = r
         info['d'] = done
         info['is_success'] = successful
-
+        
         return obs, r, done, info
 
     def reset(self):
         self._step = 0
+        self._active_task = self._task_list[0]
         self._robot.reset()
         self._world.reset()
 
@@ -164,7 +172,9 @@ class ToyEnv(SawyerEnv, Serializable):
 
         # Construct obs specified by observation_space
         obs = []
-        obs.append(robot_obs['sawyer_joint_position'])
+        obs.append(robot_obs['robot_joint_angles'])
+        obs.append(robot_obs['gripper_position'])
+        obs.append(robot_obs['gripper_state'])
         obs.append(world_obs['box_base_position'])
         obs.append(world_obs['box_lid_position'])
         obs.append(world_obs['peg_position'])
@@ -200,7 +210,7 @@ class ToyEnv(SawyerEnv, Serializable):
         raise NotImplementedError
 
     def compute_reward(self, obs, info):
-        return self._active_task.compute_reward()
+        return self._active_task.compute_reward(obs, info)
 
     def has_peg(self):
         gripper_state = self._robot.gripper_state

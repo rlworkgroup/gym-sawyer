@@ -152,7 +152,7 @@ class BlockPeg:
 
     @property
     def initial_pos(self):
-        return self._initial_pos
+        return self._init_pos
 
     @property
     def position(self):
@@ -228,7 +228,7 @@ class ToyWorld(World):
                 lid_name='lid',
                 lid_init_pos=(0.751, -0.037, 0.130),
                 hole_name='hole',                
-                random_delta_range=0,
+                random_delta_range=1,
                 resource=osp.join(World.MODEL_DIR, 'box_with_lid/model.urdf'))
             self._box = box
 
@@ -240,7 +240,7 @@ class ToyWorld(World):
             peg = BlockPeg(
                 name='peg',
                 initial_pos=(0.793, 0.293, 0.092),
-                random_delta_range=0,
+                random_delta_range=1,
                 resource=osp.join(World.MODEL_DIR, 'block_peg/model.urdf'))
             self._peg = peg
 
@@ -257,11 +257,11 @@ class ToyWorld(World):
             box_init_pos, _ = self.get_box_location(box_name)
             lid_init_pos, _ = self.get_lid_location(lid_name)            
             box = BoxWithLid(box_name, box_init_pos, lid_name, lid_init_pos, hole_name, 
-                    random_delta_range=0)
+                    random_delta_range=1)
             self._box = box
 
             peg_init_pos, _ = self.get_peg_location(peg_name)               
-            peg = BlockPeg(name=peg_name, init_pos=peg_init_pos, random_delta_range=0)
+            peg = BlockPeg(name=peg_name, init_pos=peg_init_pos, random_delta_range=1)
             self._peg = peg
 
         # Add table to moveit

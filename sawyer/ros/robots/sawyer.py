@@ -109,6 +109,7 @@ class Sawyer(Robot):
         """
         return {
             'gripper_position': np.array(self.gripper_pose['position']),
+            'gripper_state': np.array([self.gripper_state]),
             'gripper_orientation': np.array(self.gripper_pose['orientation']),
             'gripper_lvel': np.array(self._limb.endpoint_velocity()['linear']),
             'gripper_avel': np.array(self._limb.endpoint_velocity()['angular']),
