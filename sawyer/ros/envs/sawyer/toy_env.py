@@ -25,7 +25,8 @@ class ToyEnv(SawyerEnv, Serializable):
                  simulated=False, 
                  task_list=None,
                  collision_penalty=0.,
-                 terminate_on_collision=False):
+                 terminate_on_collision=False,
+                 control_mode='task_space'):
         Serializable.quick_init(self, locals())
 
         self.simulated = simulated
@@ -41,7 +42,8 @@ class ToyEnv(SawyerEnv, Serializable):
         self._moveit_group = moveit_commander.MoveGroupCommander(
             self._moveit_group_name)
 
-        self._robot = Sawyer(moveit_group=self._moveit_group_name)
+        self._robot = Sawyer(moveit_group=self._moveit_group_name, 
+                                control_mode=control_mode)
         self._world = ToyWorld(self._moveit_scene,
                                self._moveit_robot.get_planning_frame(),
                                simulated)
@@ -102,13 +104,15 @@ class ToyEnv(SawyerEnv, Serializable):
 
         # World obs
         world_obs = self._world.get_observation()
-        hole_pose, _ = self._world.get_lid_hole_location()
-        lid_pose = world_obs['box_lid_position']
+        hole_pos = self._world.get_lid_hole_pose().position
+        lid_cur_pos = world_obs['box_lid_position']
+        lid_init_pos = self._world.box.lid.initial_pose.position
+        lid_joint_state = abs(lid_cur_pos[0] - lid_init_pos.x)
 
         # Grasp state obs
         grasped_peg_obs = self.has_peg()
         
-        in_collision = self._robot.in_collision_state
+        in_collision = self._robot.in_collision_state()
 
         info = {
             'l': self._step,
@@ -119,8 +123,8 @@ class ToyEnv(SawyerEnv, Serializable):
             'gripper_position': self._robot.gripper_pose['position'],
             'gripper_state': self._robot.gripper_state,
             'grasped_peg': grasped_peg_obs,
-            'hole_site': hole_pose,
-            'lid_joint_state': lid_pose,
+            'hole_site': hole_pos,
+            'lid_joint_state': lid_joint_state,
         }
 
         r = self.compute_reward(obs, info)
@@ -217,13 +221,13 @@ class ToyEnv(SawyerEnv, Serializable):
         if gripper_state != 0.0:
             return False
 
-        peg_pose, _ = self._world.get_peg_location()
-        gripper_pose = self._robot.gripper_pose['position']
+        peg_pos = self._world.get_peg_pose().position
+        gripper_pos = self._robot.gripper_pose['position']
         max_xy_diff = 0.02
         max_z_diff = 0.2
-        return ( abs(peg_pose[0] - gripper_pose.x) < max_xy_diff and
-            abs(peg_pose[1] - gripper_pose.y) < max_xy_diff and
-            abs(peg_pose[2] - gripper_pose.z) < max_z_diff )
+        return ( abs(peg_pos.x - gripper_pos.x) < max_xy_diff and
+            abs(peg_pos.y - gripper_pos.y) < max_xy_diff and
+            abs(peg_pos.z - gripper_pos.z) < max_z_diff )
 
     @property
     def goal(self):

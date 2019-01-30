@@ -2,6 +2,7 @@
 
 import gym
 from intera_core_msgs.msg import JointLimits
+from geometry_msgs.msg import Pose, Point, Quaternion
 import intera_interface
 import moveit_msgs.msg
 import numpy as np
@@ -141,22 +142,33 @@ class Sawyer(Robot):
         :param commands: [float]
                     list of command for different joints and gripper
         """
-        action_space = self.action_space
-        commands = np.clip(commands, action_space.low, action_space.high)
-        i = 0
-        joint_commands = {}
-        for joint in self._used_joints:
-            joint_commands[joint] = commands[i]
-            i += 1
+        is_joint_commands = (len(commands) == (len(self._used_joints) + 1)) # +1 for gripper
+        commands = np.clip(commands, self.action_space.low, self.action_space.high)
 
-        if self._control_mode == 'position':
-            self._set_limb_joint_positions(joint_commands)
-        elif self._control_mode == 'velocity':
-            self._set_limb_joint_velocities(joint_commands)
-        elif self._control_mode == 'effort':
-            self._set_limb_joint_torques(joint_commands)
+        if is_joint_commands:
+            i = 0
+            joint_commands = {}
+            for joint in self._used_joints:
+                joint_commands[joint] = commands[i]
+                i += 1
 
-        self._set_gripper_state(commands[7])
+            if self._control_mode == 'position':
+                self._set_limb_joint_positions(joint_commands)
+            elif self._control_mode == 'velocity':
+                self._set_limb_joint_velocities(joint_commands)
+            elif self._control_mode == 'effort':
+                self._set_limb_joint_torques(joint_commands)
+            
+            self._set_gripper_state(commands[7])
+
+        else: # Position command
+            if self._control_mode == 'task_space':                
+                self._set_gripper_end_pose(commands[:3])
+            
+            # Rescale gripper state
+            gripper_state = self._rescale_value(commands[3], self.action_space.low[3], 
+                                self.action_space.high[3], self._gripper.MIN_POSITION, self._gripper.MAX_POSITION)
+            self._set_gripper_state(gripper_state)                    
 
     @property
     def gripper_pose(self):
@@ -176,39 +188,49 @@ class Sawyer(Robot):
         """
         lower_bounds = np.array([])
         upper_bounds = np.array([])
-        for joint in self._used_joints:
-            joint_idx = self._joint_limits.joint_names.index(joint)
-            if self._control_mode == 'position':
-                lower_bounds = np.concatenate(
-                    (lower_bounds,
-                     np.array(self._joint_limits.position_lower[
-                         joint_idx:joint_idx + 1])))
-                upper_bounds = np.concatenate(
-                    (upper_bounds,
-                     np.array(self._joint_limits.position_upper[
-                         joint_idx:joint_idx + 1])))
-            elif self._control_mode == 'velocity':
-                velocity_limit = np.array(
-                    self._joint_limits.velocity[joint_idx:joint_idx + 1]) * 0.1
-                lower_bounds = np.concatenate((lower_bounds, -velocity_limit))
-                upper_bounds = np.concatenate((upper_bounds, velocity_limit))
-            elif self._control_mode == 'effort':
-                effort_limit = np.array(
-                    self._joint_limits.effort[joint_idx:joint_idx + 1])
-                lower_bounds = np.concatenate((lower_bounds, -effort_limit))
-                upper_bounds = np.concatenate((upper_bounds, effort_limit))
-            else:
-                raise ValueError(
-                    'Control mode %s is not known!' % self._control_mode)
-        return gym.spaces.Box(
-            np.concatenate((lower_bounds, np.array([0]))),
-            np.concatenate((upper_bounds, np.array([100]))),
-            dtype=np.float32)
+        action_space = None
+        if self._control_mode == 'task_space':
+            limit = np.array([0.15, 0.15, 0.15, 1.])
+            lower_bounds = np.concatenate((lower_bounds, -limit)) 
+            upper_bounds = np.concatenate((upper_bounds, limit))
+            action_space = gym.spaces.Box(lower_bounds, upper_bounds, dtype=np.float32)
+        else:
+            for joint in self._used_joints:
+                joint_idx = self._joint_limits.joint_names.index(joint)
+                if self._control_mode == 'position':
+                    lower_bounds = np.concatenate(
+                        (lower_bounds,
+                         np.array(self._joint_limits.position_lower[
+                             joint_idx:joint_idx + 1])))
+                    upper_bounds = np.concatenate(
+                        (upper_bounds,
+                         np.array(self._joint_limits.position_upper[
+                             joint_idx:joint_idx + 1])))
+                elif self._control_mode == 'velocity':
+                    velocity_limit = np.array(
+                        self._joint_limits.velocity[joint_idx:joint_idx + 1]) * 0.1
+                    lower_bounds = np.concatenate((lower_bounds, -velocity_limit))
+                    upper_bounds = np.concatenate((upper_bounds, velocity_limit))
+                elif self._control_mode == 'effort':
+                    effort_limit = np.array(
+                        self._joint_limits.effort[joint_idx:joint_idx + 1])
+                    lower_bounds = np.concatenate((lower_bounds, -effort_limit))
+                    upper_bounds = np.concatenate((upper_bounds, effort_limit))
+                else:
+                    raise ValueError(
+                        'Control mode %s is not known!' % self._control_mode)
+
+                action_space = gym.spaces.Box(
+                    np.concatenate((lower_bounds, np.array([0]))),
+                    np.concatenate((upper_bounds, np.array([100]))),
+                    dtype=np.float32)
+
+        return action_space
 
     @property
     def gripper_state(self):
         ori_position = self._gripper.get_position()
-        return ori_position - 0.020833
+        return ori_position
 
     def _set_limb_joint_positions(self, joint_angle_cmds):
         # limit joint angles cmd
@@ -230,6 +252,19 @@ class Sawyer(Robot):
 
     def _set_gripper_state(self, position):
         self._gripper.set_position(position)
+    
+    def _set_gripper_end_pose(self, gripper_pose_delta):
+        cur_pos = np.array(self.gripper_pose['position'])
+        cur_ori = np.array(self.gripper_pose['orientation'])
+        new_pos = cur_pos + np.array(gripper_pose_delta)
+        # ik_request returns valid joint positions if exists, 
+        # otherwise returns False.
+        pose_msg = Pose()
+        pose_msg.position = Point(new_pos[0], new_pos[1], new_pos[2])
+        pose_msg.orientation = Quaternion(cur_ori[0], cur_ori[1], cur_ori[2], cur_ori[3])
+        joint_angles = self._limb.ik_request(pose_msg)
+        if joint_angles:
+            self._limb.move_to_joint_positions(joint_angles)
 
     def _move_to_start_position(self):
         if rospy.is_shutdown():
@@ -237,3 +272,9 @@ class Sawyer(Robot):
         self._limb.move_to_joint_positions(self._initial_joint_pos)
         self._gripper.close()
         rospy.sleep(1.0)
+
+    def _rescale_value(self, value, cur_min, cur_max, new_range_min, new_range_max):
+        rescaled_value = (((new_range_max - new_range_min) * (
+                            value - cur_min)) / (cur_max - cur_min)) + new_range_min
+
+        return rescaled_value 

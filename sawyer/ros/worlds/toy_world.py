@@ -15,18 +15,19 @@ import sawyer.garage.misc.logger as logger
 class BoxWithLid:    
 
     class Lid:
-        def __init__(self, name, initial_pos, hole_name):
+        def __init__(self, name, init_pose, hole_name):
             self._name = name
             self._hole_name = hole_name
-            self._initial_pos = Point(
-                x=initial_pos[0], y=initial_pos[1], z=initial_pos[2])
-            self._position = Point(
-                x=initial_pos[0], y=initial_pos[1], z=initial_pos[2])
-            self._orientation = Quaternion(x=0., y=0., z=0., w=1.)
+            self._initial_pose = init_pose
+            self._pose = Pose(init_pose.position, init_pose.orientation)
 
         @property
         def name(self):
             return self._name
+
+        @property
+        def initial_pose(self):
+            return self._initial_pose
 
         @property
         def hole_name(self):
@@ -34,32 +35,26 @@ class BoxWithLid:
 
         @property
         def position(self):
-            return self._position
+            return self._pose.position
 
         @position.setter
         def position(self, value):
-            self._position = value
+            self._pose.position = value
 
         @property
         def orientation(self):
-            return self._orientation
+            return self._pose.orientation
 
         @orientation.setter
         def orientation(self, value):
-            self._orientation = value 
+            self._pose.orientation = value 
 
-    def __init__(self, name, init_pos, lid_name, lid_init_pos, hole_name, random_delta_range, resource=None):
+    def __init__(self, name, init_pose, lid_name, lid_init_pose, hole_name, resource=None):
         self._name = name
         self._resource = resource                 
-        self._initial_pos = Point(x=init_pos[0], y=init_pos[1], z=init_pos[2])
-        self._random_delta_range = random_delta_range         
-        self._position = Point(x=init_pos[0], y=init_pos[1], z=init_pos[2])
-        self._orientation = Quaternion(x=0., y=0., z=0., w=1.)        
-        self._lid = self.Lid(lid_name, lid_init_pos, hole_name)
-
-    @property
-    def random_delta_range(self):
-        return self._random_delta_range
+        self._initial_pose = init_pose
+        self._pose = Pose(init_pose.position, init_pose.orientation)        
+        self._lid = self.Lid(lid_name, lid_init_pose, hole_name)
 
     @property
     def name(self):
@@ -70,44 +65,41 @@ class BoxWithLid:
         return self._resource
 
     @property
-    def initial_pos(self):
-        return self._initial_pos
+    def initial_pose(self):
+        return self._initial_pose
 
     @property
     def position(self):
-        return self._position
+        return self._pose.position
 
     @position.setter
     def position(self, value):
-        self._position = value
+        self._pose.position = value
 
     @property
     def orientation(self):
-        return self._orientation
+        return self._pose.orientation
 
     @orientation.setter
     def orientation(self, value):
-        self._orientation = value        
+        self._pose.orientation = value     
+
+    @property
+    def observation_space(self):
+        return gym.spaces.Box(np.inf, -np.inf, shape=(6,), dtype=np.float32)   
 
     @property
     def lid(self):
         return self._lid
 
     def reset(self):
-        random_delta = np.zeros(2)
-        new_pos = self.initial_pos
-        while np.linalg.norm(random_delta) < 0.1:
-            random_delta = np.random.uniform(
-                -self.random_delta_range,
-                self.random_delta_range,
-                size=2)
-        new_pos.x += random_delta[0]
-        new_pos.y += random_delta[1]
-        return new_pos
+        init_position = self._initial_pose.position
+        self.position = Point(x=init_position.x, y=init_position.y, z=init_position.z)
+        return self.initial_pose
 
     def get_observation(self):
         box_pos = np.array(
-            [self.position.x, self.position.y, self._position.z])
+            [self.position.x, self.position.y, self.position.z])
         box_ori = np.array([
             self.orientation.x, self.orientation.y, self.orientation.z,
             self.orientation.w
@@ -128,19 +120,11 @@ class BoxWithLid:
 
 
 class BlockPeg:
-    def __init__(self, name, init_pos, random_delta_range, resource=None):
+    def __init__(self, name, init_pose, resource=None):
         self._name = name
         self._resource = resource
-        self._init_pos = Point(
-            x=init_pos[0], y=init_pos[1], z=init_pos[2])
-        self._random_delta_range = random_delta_range
-        self._position = Point(
-            x=init_pos[0], y=init_pos[1], z=init_pos[2])
-        self._orientation = Quaternion(x=0., y=0., z=0., w=1.)
-
-    @property
-    def random_delta_range(self):
-        return self._random_delta_range
+        self._initial_pose = init_pose 
+        self._pose = Pose(init_pose.position, init_pose.orientation)
 
     @property
     def name(self):
@@ -151,44 +135,39 @@ class BlockPeg:
         return self._resource
 
     @property
-    def initial_pos(self):
-        return self._init_pos
+    def initial_pose(self):
+        return self._initial_pose
 
     @property
     def position(self):
-        return self._position
+        return self._pose.position
 
     @position.setter
     def position(self, value):
-        self._position = value
+        self._pose.position = value
 
     @property
     def orientation(self):
-        return self._orientation
+        return self._pose.orientation
 
     @orientation.setter
     def orientation(self, value):
-        self._orientation = value
+        self._pose.orientation = value
 
     @property
     def observation_space(self):
-        return Box(np.inf, -np.inf, shape=(6,), dtype=np.float32)
+        return gym.spaces.Box(np.inf, -np.inf, shape=(6,), dtype=np.float32)
 
     def reset(self):
-        random_delta = np.zeros(2)
-        new_pos = self.initial_pos
-        while np.linalg.norm(random_delta) < 0.1:
-            random_delta = np.random.uniform(
-                -self.random_delta_range,
-                self.random_delta_range,
-                size=2)
-        new_pos.x += random_delta[0]
-        new_pos.y += random_delta[1]
-        return new_pos
+        init_pos = self._initial_pose.position
+        init_ori = self._initial_pose.orientation
+        self.position = Point(x=init_pos.x, y=init_pos.y, z=init_pos.z)
+        self.orientation = Quaternion(x=init_ori.x, y=init_ori.y, z=init_ori.z, w=init_ori.w)
+        return self.initial_pose
 
     def get_observation(self):
         pos = np.array(
-            [self.position.x, self.position.y, self._position.z])
+            [self.position.x, self.position.y, self.position.z])
         ori = np.array([
             self.orientation.x, self.orientation.y, self.orientation.z,
             self.orientation.w
@@ -209,6 +188,14 @@ class ToyWorld(World):
         self._tf_listener = None
         self._base_frame = "base_d"
 
+    @property
+    def box(self):
+        return self._box
+
+    @property
+    def peg(self):
+        return self._peg
+
     def initialize(self):
         if self._simulated:
             # Table
@@ -224,11 +211,10 @@ class ToyWorld(World):
                 osp.join(World.MODEL_DIR, 'box_with_lid/model.urdf'))
             box = BoxWithLid(
                 name='box',
-                init_pos=(0.756, -0.042, 0.007),
+                init_pose=Pose(Point(0.756, -0.042, 0.007), Quaternion(0, 0, 0, 1)),
                 lid_name='lid',
-                lid_init_pos=(0.751, -0.037, 0.130),
+                lid_init_pose=Pose(Point(0.751, -0.037, 0.130), Quaternion(0, 0, 0, 1)),
                 hole_name='hole',                
-                random_delta_range=1,
                 resource=osp.join(World.MODEL_DIR, 'box_with_lid/model.urdf'))
             self._box = box
 
@@ -239,8 +225,7 @@ class ToyWorld(World):
                 osp.join(World.MODEL_DIR, 'peg/model.urdf'))
             peg = BlockPeg(
                 name='peg',
-                initial_pos=(0.793, 0.293, 0.092),
-                random_delta_range=1,
+                init_pose=Pose(Point((0.793, 0.293, 0.092), Quaternion(0, 0, 0, 1))), 
                 resource=osp.join(World.MODEL_DIR, 'block_peg/model.urdf'))
             self._peg = peg
 
@@ -254,14 +239,14 @@ class ToyWorld(World):
             lid_name = 'lid'
             peg_name = 'peg'
             hole_name = 'hole'
-            box_init_pos, _ = self.get_box_location(box_name)
-            lid_init_pos, _ = self.get_lid_location(lid_name)            
-            box = BoxWithLid(box_name, box_init_pos, lid_name, lid_init_pos, hole_name, 
-                    random_delta_range=1)
+              
+            box_init_pose = self.get_box_pose(box_name)
+            lid_init_pose = self.get_lid_pose(lid_name)
+            box = BoxWithLid(box_name, box_init_pose, lid_name, lid_init_pose, hole_name)
             self._box = box
 
-            peg_init_pos, _ = self.get_peg_location(peg_name)               
-            peg = BlockPeg(name=peg_name, init_pos=peg_init_pos, random_delta_range=1)
+            peg_init_pose = self.get_peg_pose(peg_name)               
+            peg = BlockPeg(peg_name, peg_init_pose)
             self._peg = peg
 
         # Add table to moveit
@@ -286,17 +271,7 @@ class ToyWorld(World):
             obj_idx = model_names.index(obj.name)
             obj_pose = model_states.pose[obj_idx]
             obj.position = obj_pose.position
-            obj.orientation = obj_pos.orientation
-
-    def _ar_update_obj_states(self, data):
-        translation = data.transform.translation
-        rotation = data.transform.rotation
-        child_frame_id = data.child_frame_id
-
-        for block in self._blocks:
-            if block.resource == child_frame_id:
-                block.position = translation
-                block.orientation = rotation
+            obj.orientation = obj_pose.orientation
 
     def reset(self):
         if self._simulated:
@@ -310,8 +285,8 @@ class ToyWorld(World):
         else:
             objs = [self._box, self._peg]
             for obj in objs:
-                new_pos = obj.reset()
-                logger.log('new position for {} is x = {}, y = {}, z = {}'.
+                new_pos = obj.reset().position
+                logger.log('position for {} is x = {}, y = {}, z = {}'.
                     format(obj.name, new_pos.x, new_pos.y, new_pos.z))
                 ready = False
                 while not ready:
@@ -341,18 +316,18 @@ class ToyWorld(World):
     def get_observation(self):
         if not self._simulated:
             #Update box and lid positions using apriltags
-                        box_pos, box_ori = self.get_box_location()
-                        self._box.position = Point(x=box_pos[0], y=box_pos[1], z=box_pos[2])
-                        self._box.orientation = Quaternion(x=box_ori[0], y=box_ori[1], z=box_ori[2], w=box_ori[3])
+                        box_pose = self.get_box_pose()
+                        self._box.position = box_pose.position
+                        self._box.orientation = box_pose.orientation
                         
-                        lid_pos, lid_ori = self.get_lid_location()
-                        self._box.lid.position = Point(x=lid_pos[0], y=lid_pos[1], z=lid_pos[2])
-                        self._box.lid.orientation = Quaternion(x=lid_ori[0], y=lid_ori[1], z=lid_ori[2], w=lid_ori[3])
+                        lid_pose = self.get_lid_pose()
+                        self._box.lid.position = lid_pose.position
+                        self._box.lid.orientation = lid_pose.orientation
 
             #Update peg position using apriltags
-                        peg_pos, peg_ori = self.get_peg_location()
-                        self._peg.position = Point(x=peg_pos[0], y=peg_pos[1], z=peg_pos[2])
-                        self._peg.orientation = Quaternion(x=peg_ori[0], y=peg_ori[1], z=peg_ori[2], w=peg_ori[3])
+                        peg_pose = self.get_peg_pose()
+                        self._peg.position = peg_pose.position
+                        self._peg.orientation = peg_pose.orientation
 
                 
         obs = {}
@@ -361,7 +336,7 @@ class ToyWorld(World):
             obs = {**obs, **obj.get_observation()}
         return obs
 
-    def get_box_location(self, box_frame=None):
+    def get_box_pose(self, box_frame=None):
         box_pos = None
         box_ori = None
         if box_frame is None:
@@ -374,9 +349,11 @@ class ToyWorld(World):
         box_pos, box_ori = self._tf_listener.lookupTransform(
             self._base_frame, box_frame, rospy.Time(0))
         
-        return box_pos, box_ori
+        box_pos = Point(box_pos[0], box_pos[1], box_pos[2])
+        box_ori = Quaternion(box_ori[0], box_ori[1], box_ori[2], box_ori[3])
+        return Pose(box_pos, box_ori)
 
-    def get_lid_location(self, lid_frame=None):        
+    def get_lid_pose(self, lid_frame=None):        
         lid_pos = None
         lid_ori = None
         if lid_frame is None:
@@ -388,9 +365,12 @@ class ToyWorld(World):
         #Get transform base -> lid
         lid_pos, lid_ori = self._tf_listener.lookupTransform(
             self._base_frame, lid_frame, rospy.Time(0))
-        return lid_pos, lid_ori
+        
+        lid_pos = Point(lid_pos[0], lid_pos[1], lid_pos[2])
+        lid_ori = Quaternion(lid_ori[0], lid_ori[1], lid_ori[2], lid_ori[3])
+        return Pose(lid_pos, lid_ori)
 
-    def get_peg_location(self, peg_frame=None):        
+    def get_peg_pose(self, peg_frame=None):        
         peg_pos = None
         peg_ori = None
         if peg_frame is None:
@@ -403,9 +383,11 @@ class ToyWorld(World):
         peg_pos, peg_ori = self._tf_listener.lookupTransform(
             self._base_frame, peg_frame, rospy.Time(0))
 
-        return peg_pos, peg_ori
+        peg_pos = Point(peg_pos[0], peg_pos[1], peg_pos[2])
+        peg_ori = Quaternion(peg_ori[0], peg_ori[1], peg_ori[2], peg_ori[3])
+        return Pose(peg_pos, peg_ori)
 
-    def get_lid_hole_location(self, hole_frame=None):
+    def get_lid_hole_pose(self, hole_frame=None):
         if hole_frame is None:
             hole_frame = self._box.lid.hole_name
         self._tf_listener.waitForTransform(
@@ -413,7 +395,9 @@ class ToyWorld(World):
         hole_pos, hole_ori = self._tf_listener.lookupTransform(
             self._base_frame, hole_frame, rospy.Time(0))
         
-        return hole_pos, hole_ori
+        hole_pos = Point(hole_pos[0], hole_pos[1], hole_pos[2])
+        hole_ori = Quaternion(hole_ori[0], hole_ori[1], hole_ori[2], hole_ori[3])
+        return Pose(hole_pos, hole_ori)
 
     @property
     def observation_space(self):
@@ -421,4 +405,4 @@ class ToyWorld(World):
 
         high = np.concatenate([sp.high for sp in spaces]).ravel()
         low = np.concatenate([sp.low for sp in spaces]).ravel()
-        return Box(high, low, dtype=np.float32)
+        return gym.spaces.Box(high, low, dtype=np.float32)
