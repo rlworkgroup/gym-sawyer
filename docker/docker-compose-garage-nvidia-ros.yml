@@ -1,0 +1,23 @@
+version: '2.2'
+services:
+  garage-nvidia-ros-intera-py2:
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile.ros_intera
+      args:
+        - PARENT_IMAGE=rlworkgroup/garage-nvidia
+    image: rlworkgroup/garage-nvidia-ros-intera-py2
+  garage-nvidia-ros-intera-py3:
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile.garage_ros_intera
+      args:
+        - PARENT_IMAGE=rlworkgroup/garage-nvidia-ros-intera-py2
+    image: rlworkgroup/garage-nvidia-ros-intera-py3
+  garage-nvidia-ros:
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile.garage_nvidia_ros
+      args:
+        - PARENT_IMAGE=rlworkgroup/garage-nvidia-ros-intera-py3
+    image: rlworkgroup/garage-nvidia-ros

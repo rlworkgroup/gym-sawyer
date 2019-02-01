@@ -1,48 +1,43 @@
 ARG PARENT_IMAGE=ubuntu:16.04
 FROM $PARENT_IMAGE
 
-# Install ROS Kinetic. Instructions obtained from:
+# Install ROS Kinetic and Intera SDK dependencies. Instructions obtained from:
 # http://sdk.rethinkrobotics.com/intera/Workstation_Setup
 RUN echo "deb http://packages.ros.org/ros/ubuntu xenial main" > /etc/apt/sources.list.d/ros-latest.list
 
 RUN apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key 421C365BD9FF1F717815A3895523BAEEB01FA116
 
-RUN DEBIAN_FRONTEND=noninteractive apt update && \
- apt -y install ros-kinetic-desktop-full
+RUN \
+  apt -qy update && \
+  DEBIAN_FRONTEND=noninteractive apt -qy install \
+    git-core \
+    python-argparse \
+    python-rosdep \
+    python-rosinstall \
+    python-vcstools \
+    python-wstool \
+    ros-kinetic-actionlib \
+    ros-kinetic-actionlib-msgs \
+    ros-kinetic-control-msgs \
+    ros-kinetic-cv-bridge \
+    ros-kinetic-desktop-full \
+    ros-kinetic-dynamic-reconfigure \
+    ros-kinetic-joystick-drivers \
+    ros-kinetic-rospy-message-converter \
+    ros-kinetic-rviz \
+    ros-kinetic-tf2-ros \
+    ros-kinetic-trajectory-msgs \
+    ros-kinetic-xacro && \
+  apt-get clean && \
+  rm -rf /var/lib/apt/lists/*
 
-RUN rosdep init
+RUN \
+  rosdep init && \
+  rosdep update
 
-RUN rosdep update
-
-RUN DEBIAN_FRONTEND=noninteractive apt update && \
- apt -y install python-rosinstall
-
-# Create and source ROS Workspace
-RUN echo "source /opt/ros/kinetic/setup.bash" >> ~/.bashrc
-
-RUN mkdir -p ~/ros_ws/src
+RUN mkdir -p /root/ros_ws/src
 
 RUN ["/bin/bash", "-c", \
   "source /opt/ros/kinetic/setup.bash && \
-  cd ~/ros_ws && \ 
+  cd /root/ros_ws && \
   catkin_make"]
-
-# Install Intera SDK dependencies
-RUN DEBIAN_FRONTEND=noninteractive apt -y install \
-  git-core \
-  python-argparse \
-  python-wstool \
-  python-vcstools \
-  python-rosdep \
-  ros-kinetic-control-msgs \
-  ros-kinetic-joystick-drivers \
-  ros-kinetic-xacro \
-  ros-kinetic-tf2-ros \
-  ros-kinetic-rviz \
-  ros-kinetic-cv-bridge \
-  ros-kinetic-actionlib \
-  ros-kinetic-actionlib-msgs \
-  ros-kinetic-dynamic-reconfigure \
-  ros-kinetic-trajectory-msgs \
-  ros-kinetic-rospy-message-converter
-

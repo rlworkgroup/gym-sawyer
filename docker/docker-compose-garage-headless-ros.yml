@@ -1,0 +1,23 @@
+version: '2.2'
+services:
+  garage-headless-ros-intera-py2:
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile.ros_intera
+      args:
+        - PARENT_IMAGE=rlworkgroup/garage-headless
+    image: rlworkgroup/garage-headless-ros-intera-py2
+  garage-headless-ros-intera-py3:
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile.garage_ros_intera
+      args:
+        - PARENT_IMAGE=rlworkgroup/garage-headless-ros-intera-py2
+    image: rlworkgroup/garage-headless-ros-intera-py3
+  garage-headless-ros:
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile.garage_headless_ros
+      args:
+        - PARENT_IMAGE=rlworkgroup/garage-headless-ros-intera-py3
+    image: rlworkgroup/garage-headless-ros
