@@ -88,7 +88,7 @@ class ToyEnv(SawyerEnv, Serializable):
 
         high = np.concatenate([sp.high for sp in spaces]).ravel()
         low = np.concatenate([sp.low for sp in spaces]).ravel()
-        return Box(high, low, dtype=np.float32)
+        return gym.spaces.Box(high, low, dtype=np.float32)
 
     @rate_limited(STEP_FREQ)
     def step(self, action):
@@ -176,12 +176,14 @@ class ToyEnv(SawyerEnv, Serializable):
 
         # Construct obs specified by observation_space
         obs = []
-        obs.append(robot_obs['robot_joint_angles'])
         obs.append(robot_obs['gripper_position'])
         obs.append(robot_obs['gripper_state'])
         obs.append(world_obs['box_base_position'])
+        obs.append(world_obs['box_base_orientation'])
         obs.append(world_obs['box_lid_position'])
+        obs.append(world_obs['box_lid_orientation'])
         obs.append(world_obs['peg_position'])
+        obs.append(world_obs['peg_orientation'])
         obs = np.concatenate(obs).ravel()
 
         return obs

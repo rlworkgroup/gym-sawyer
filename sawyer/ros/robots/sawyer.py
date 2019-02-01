@@ -132,7 +132,7 @@ class Sawyer(Robot):
         return gym.spaces.Box(
             -np.inf,
             np.inf,
-            shape=self.get_observation().shape,
+            shape=(len(self.get_observation()),),
             dtype=np.float32)
 
     def send_command(self, commands):
@@ -230,6 +230,9 @@ class Sawyer(Robot):
     @property
     def gripper_state(self):
         ori_position = self._gripper.get_position()
+        if self._control_mode == 'task_space':
+            return self._rescale_value(ori_position, self._gripper.MIN_POSITION, self._gripper.MAX_POSITION,
+                self.action_space.low[3], self.action_space.high[3])
         return ori_position
 
     def _set_limb_joint_positions(self, joint_angle_cmds):
