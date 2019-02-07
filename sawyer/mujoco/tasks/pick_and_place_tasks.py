@@ -20,9 +20,9 @@ class PickTask(ComposableTask):
                  never_done=False,
                  object_lift_target=0.3,
                  completion_bonus=0,
-                 c_dist=0.1,
-                 c_grasp=0.35,
-                 c_lift=0.5):
+                 c_dist=1,
+                 c_grasp=1,
+                 c_lift=10):
         self._pick_object = pick_object
         self._never_done = never_done
         self._obj_lift_target = object_lift_target
@@ -31,19 +31,34 @@ class PickTask(ComposableTask):
         self._c_grasp = c_grasp
         self._c_lift = c_lift
 
+        self._last_d_grip2obj = None
+        self._last_dz_obj = None
+
     def compute_reward(self, obs, info):
-        gripper_pos = info['gripper_position']
+        # Gather info variables
+        gripper_pos = info['gripper_base_position']
         obj_pos = info['world_obs']['{}_position'.format(self._pick_object)]
         grasped = info['grasped_{}'.format(self._pick_object)]
 
+        # Calculate reward measures
         d_grip2obj = np.linalg.norm(gripper_pos - obj_pos, axis=-1)
-        dz_table2obj = np.linalg.norm(obj_pos[2] - self._obj_lift_target)
+        if self._last_d_grip2obj is None:
+            self._last_d_grip2obj = d_grip2obj
+        dz_obj = obj_pos[2]
+        if self._last_dz_obj is None:
+            self._last_dz_obj = dz_obj
 
-        r_dist = (1 - np.tanh(10. * d_grip2obj)) * self._c_dist
-        r_grasp = self._c_dist + int(grasped) * self._c_grasp
-        r_lift = r_grasp + (1 - np.tanh(15. * dz_table2obj)) * (self._c_lift - self._c_grasp)
+        # Calculate reward components
+        r_dist = int(not grasped) * 100 * (self._last_d_grip2obj - d_grip2obj)
+        r_grasp = 0
+        r_lift = int(grasped) * 100 * (dz_obj - self._last_dz_obj)
 
-        return max(r_dist, r_grasp, r_lift)
+        # Update stateful variables
+        self._last_d_grip2obj = d_grip2obj
+        self._last_dz_obj = dz_obj
+
+        r = self._c_dist * r_dist + self._c_grasp * r_grasp + self._c_lift * r_lift
+        return r
 
     def is_success(self, obs, info):
         if self._never_done:
@@ -53,6 +68,13 @@ class PickTask(ComposableTask):
         grasped = info['grasped_{}'.format(self._pick_object)]
 
         return grasped and obj_pos[2] > self._obj_lift_target
+
+    def done(self, obs, info):
+        obj_pos = info['world_obs']['{}_position'.format(self._pick_object)]
+
+        if obj_pos[2] < 0.:
+            return True
+        return False
 
     @property
     def completion_bonus(self):

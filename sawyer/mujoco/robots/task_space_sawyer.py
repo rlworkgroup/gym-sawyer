@@ -33,7 +33,7 @@ class TaskSpaceSawyer(Sawyer):
     @overrides
     def reset(self):
         self.joint_positions = self.INITIAL_JOINT_STATE
-        self._env.sim.data.mocap_quat[:] = np.array([0, 0, 1, 0])
+        self._env.sim.data.mocap_quat[0, :] = np.array([0, 0, 1, 0])
         self._env.sim.data.set_mocap_pos('mocap', self.INITIAL_MOCAP_POS)
         self._env.sim.forward()
         for _ in range(100):

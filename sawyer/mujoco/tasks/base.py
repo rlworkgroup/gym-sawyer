@@ -23,3 +23,6 @@ class ComposableTask(abc.ABC):
     def completion_bonus(self):
         """ Getter for completion bonus. """
         raise NotImplementedError
+
+    def done(self, obs, info):
+        return False

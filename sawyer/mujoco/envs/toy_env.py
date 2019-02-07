@@ -48,6 +48,7 @@ class ToyEnv(MujocoEnv, Serializable):
                  completion_bonus=0.,
                  action_scale=1.0,
                  collision_penalty=0.,
+                 termination_penalty=0.,
                  terminate_on_collision=False,
                  randomize_start_jpos=False,
                  use_sticky_grasp=True,
@@ -63,6 +64,7 @@ class ToyEnv(MujocoEnv, Serializable):
         self._completion_bonus = completion_bonus
         self._action_scale = action_scale
         self._collision_penalty = collision_penalty
+        self._termination_penalty = termination_penalty
         self._terminate_on_collision = terminate_on_collision
         self._randomize_start_jpos = randomize_start_jpos
         self._use_sticky_grasp = use_sticky_grasp
@@ -187,19 +189,6 @@ class ToyEnv(MujocoEnv, Serializable):
         a = np.clip(a, self.action_space.low, self.action_space.high)
 
         self._robot.step(a)
-        self._step += 1
-        obs = self.get_obs()
-
-        # Robot obs
-        robot_obs = self._robot.get_observation()
-
-        # World obs
-        world_obs = self._world.get_observation()
-        hole_site = self.sim.data.get_site_xpos('box_lid:hole')
-        lid_joint_state = self.sim.data.get_joint_qpos('box_lid:joint')
-
-        # Grasp state obs
-        grasped_peg_obs = self.has_peg()
 
         # Sticky grasp
         if self._use_sticky_grasp:
@@ -208,10 +197,10 @@ class ToyEnv(MujocoEnv, Serializable):
             gripper_xpos = self.sim.data.get_body_xpos('r_gripper_r_finger_tip')
             gripper_xquat = self.sim.data.get_body_xquat('r_gripper_r_finger_tip')
             dz_gripper2peg = np.abs(peg_xpos[2] - gripper_xpos[2])
+            grasped_peg_obs = self.has_peg()
 
             # Latch on/off sticky grasp
-            if (not self._sticky_grasp and grasped_peg_obs and
-                dz_gripper2peg > 0.005 and dz_gripper2peg < 0.055):
+            if not self._sticky_grasp and grasped_peg_obs:
                 self._sticky_grasp = True
                 self._sticky_xquat = peg_xquat
                 self._sticky_xpos = peg_xpos - gripper_xpos
@@ -227,6 +216,21 @@ class ToyEnv(MujocoEnv, Serializable):
                     axis=-1)
                 self.sim.data.set_joint_qpos('peg:joint', sticky_qpos)
 
+        # Get primary obs
+        self._step += 1
+        obs = self.get_obs()
+
+        # Robot obs
+        robot_obs = self._robot.get_observation()
+
+        # World obs
+        world_obs = self._world.get_observation()
+        hole_site = self.sim.data.get_site_xpos('box_lid:hole')
+        lid_joint_state = self.sim.data.get_joint_qpos('box_lid:joint')
+
+        # Grasp state obs
+        grasped_peg_obs = self.has_peg()
+
         # Computing collision detection is expensive so cache the result
         in_collision = self.in_collision
 
@@ -241,6 +245,7 @@ class ToyEnv(MujocoEnv, Serializable):
             'grasped_peg': grasped_peg_obs,
             'hole_site': hole_site,
             'lid_joint_state': lid_joint_state,
+            'gripper_base_position': self.sim.data.get_body_xpos('right_gripper_base'),
         }
 
         r = self.compute_reward(obs, info)
@@ -261,6 +266,11 @@ class ToyEnv(MujocoEnv, Serializable):
             if self._terminate_on_collision:
                 done = True
                 successful = False
+
+        if self._active_task.done(obs, info):
+            r -= self._termination_penalty
+            done = True
+            successful = False
 
         info['r'] = r
         info['d'] = done
