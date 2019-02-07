@@ -52,6 +52,7 @@ class Sawyer(Robot):
         self._joint_limits = rospy.wait_for_message('/robot/joint_limits',
                                                     JointLimits)
         self._moveit_group = moveit_group
+        self._gripper_offset = 0.136
 
         self._sv = StateValidity()
 
@@ -177,7 +178,11 @@ class Sawyer(Robot):
 
         :return: gripper pose
         """
-        return self._limb.endpoint_pose()
+        limb_pose = self._limb.endpoint_pose()
+        limb_position = limb_pose['position']
+        gripper_pose = limb_pose
+        gripper_pose['position'] = intera_interface.Limb.Point(limb_position.x, limb_position.y, limb_position.z-self._gripper_offset)
+        return gripper_pose
 
     @property
     def action_space(self):
@@ -265,7 +270,7 @@ class Sawyer(Robot):
         pose_msg = Pose()
         pose_msg.position = Point(new_pos[0], new_pos[1], new_pos[2])
         pose_msg.orientation = Quaternion(cur_ori[0], cur_ori[1], cur_ori[2], cur_ori[3])
-        joint_angles = self._limb.ik_request(pose_msg)
+        joint_angles = self._limb.ik_request(pose_msg, "right_gripper_tip")
         if joint_angles:
             self._limb.move_to_joint_positions(joint_angles)
 
