@@ -43,18 +43,6 @@ RUN /bin/bash -c 'cd /root/ros_ws/ && \
 RUN /bin/bash -c 'if [[ -f /opt/ros/kinetic/lib/python2.7/dist-packages/cv2.so ]]; then \
   rm /opt/ros/kinetic/lib/python2.7/dist-packages/cv2.so; fi'
 
-# Setup moveit installation.
-COPY moveit.rosinstall /root/ros_ws/src
-COPY setup_moveit.sh /root
-RUN /root/setup_moveit.sh
-
-# Compile moveit with the Python executable used by garage.
-RUN /bin/bash -c 'cd /root/ros_ws/ && \
-  rosdep install -qy --from-paths src/ --ignore-src --rosdistro kinetic && \
-  source activate garage && \
-  source /opt/ros/kinetic/setup.bash && \
-  catkin_make --cmake-args -DPYTHON_EXECUTABLE="$(which python)" -DCATKIN_BLACKLIST_PACKAGES='moveit_setup_assistant''
-
 # Although the intera, moveit and other libraries are now compiled for Python3, they
 # still have the Python2 syntax. This script sets them all to Python3.
 RUN /bin/bash -c 'packages=(moveit moveit_msgs intera_sdk); \
@@ -69,3 +57,20 @@ RUN /bin/bash -c 'packages=(moveit moveit_msgs intera_sdk); \
 WORKDIR /root/code/gym-sawyer
 # Add code stub last
 COPY . /root/code/gym-sawyer
+ENV PYTHONPATH=$PYTHONPATH:/root/code/gym-sawyer
+
+# TODO: REMOVE BEFORE MERGING
+RUN DEBIAN_FRONTEND=noninteractive apt -y install \
+  tmux \
+  vim
+
+# TODO: REMOVE BEFORE MERGING
+COPY ./docker/sawyer-robot/intera.sh /root/ros_ws
+# Uncomment if collecting data
+# RUN mkdir /root/ros_ws/src/get_task_srv 
+# COPY ./docker/sawyer-robot/internal/temp/get_task_srv /root/ros_ws/src/get_task_srv
+# RUN /bin/bash -c 'cd /root/ros_ws/ && \
+#  source activate garage && \
+#  source /opt/ros/kinetic/setup.bash && \
+#  catkin_make -DPYTHON_EXECUTABLE="$(which python)" --pkg get_task_srv'
+

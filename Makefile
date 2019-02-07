@@ -20,10 +20,6 @@ build-garage-headless-ros: docker/docker-compose-garage-headless-ros.yml
 build-garage-nvidia-ros: docker/docker-compose-garage-nvidia-ros.yml
 	docker-compose -f docker/docker-compose-garage-nvidia-ros.yml build
 
-build-garage-gym-sawyer: Dockerfile docker/get_intera.sh
-	docker/get_intera.sh
-	docker build . -t rlworkgroup/garage-nvidia-gym-sawyer
-
 build-nvidia-sawyer-sim: docker/docker-compose-nv-sim.yml docker/get_intera.sh
 	docker/get_intera.sh --sim
 	docker-compose -f docker/docker-compose-nv-sim.yml build
@@ -68,22 +64,6 @@ run-garage-nvidia-ros: build-garage-nvidia-ros
 		--name $(CONTAINER_NAME) \
 		$(ADD_ARGS) \
 		rlworkgroup/garage-nvidia-ros $(RUN_CMD)
-
-run-garage-gym-sawyer: build-garage-gym-sawyer
-	xhost +local:docker
-	@ docker run \
-		--init \
-		-it \
-		--rm \
-		--runtime=nvidia \
-		-v /tmp/.X11-unix:/tmp/.X11-unix \
-		-e DISPLAY="${DISPLAY}" \
-		-e QT_X11_NO_MITSHM=1 \
-		--net="host" \
-		$(ADD_HOST) \
-		-e MJKEY="$(MJKEY)" \
-		--name "garage-gym-sawyer" \
-		rlworkgroup/garage-nvidia-gym-sawyer:$(GARAGE_VER) $(RUN_CMD)
 
 run-nvidia-sawyer-sim: build-nvidia-sawyer-sim
 	xhost +local:docker
