@@ -63,5 +63,8 @@ class TaskSpaceSawyer(Sawyer):
         self._env.sim.data.mocap_quat[0, :] = np.array([0, 0, 1, 0])
         self.gripper_state = action[3]
         for _ in range(5):
-            self._env.sim.step()
+            try:
+                self._env.sim.step()
+            except Exception:
+                pass
         self._env.sim.forward()

@@ -81,7 +81,9 @@ class ToyEnv(MujocoEnv, Serializable):
         # task config: Task space control + 1 box w/ lid and 1 peg
         elif self._xml_config == 'task':
             self._robot = robot or TaskSpaceSawyer(
-                self, randomize_start_jpos=randomize_start_jpos)
+                self, randomize_start_jpos=randomize_start_jpos,
+                action_low=np.array([-0.05, -0.05, -0.05, -1.0]),
+                action_high=np.array([0.05, 0.05, 0.05, 1.0]))
             self._world = world or ToyWorld(self, xml_config=self._xml_config)
         else:
             warnings.warn("Unknown ToyEnv xml_config: {}".format(
@@ -245,7 +247,9 @@ class ToyEnv(MujocoEnv, Serializable):
             'grasped_peg': grasped_peg_obs,
             'hole_site': hole_site,
             'lid_joint_state': lid_joint_state,
-            'gripper_base_position': self.sim.data.get_body_xpos('right_gripper_base'),
+            'r_finger_tip': self.sim.data.get_body_xpos("r_gripper_r_finger_tip"),
+            'l_finger_tip': self.sim.data.get_body_xpos("r_gripper_l_finger_tip"),
+            'gripper_site': self.sim.data.get_site_xpos("gripper_site")
         }
 
         r = self.compute_reward(obs, info)

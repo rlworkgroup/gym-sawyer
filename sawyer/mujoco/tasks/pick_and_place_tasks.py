@@ -21,7 +21,7 @@ class PickTask(ComposableTask):
                  object_lift_target=0.3,
                  completion_bonus=0,
                  c_dist=1,
-                 c_grasp=1,
+                 c_grasp=100,
                  c_lift=10):
         self._pick_object = pick_object
         self._never_done = never_done
@@ -36,29 +36,19 @@ class PickTask(ComposableTask):
 
     def compute_reward(self, obs, info):
         # Gather info variables
-        gripper_pos = info['gripper_base_position']
+        gripper_pos = info['gripper_position']
         obj_pos = info['world_obs']['{}_position'.format(self._pick_object)]
         grasped = info['grasped_{}'.format(self._pick_object)]
+        # l_finger_tip = info['l_finger_tip']
+        # r_finger_tip = info['r_finger_tip']
+        gripper_site = info['gripper_site']
 
-        # Calculate reward measures
-        d_grip2obj = np.linalg.norm(gripper_pos - obj_pos, axis=-1)
-        if self._last_d_grip2obj is None:
-            self._last_d_grip2obj = d_grip2obj
-        dz_obj = obj_pos[2]
-        if self._last_dz_obj is None:
-            self._last_dz_obj = dz_obj
+        d_gripper_site = np.linalg.norm(gripper_site - obj_pos, axis=-1)
+        # TODO: add this term for reward in future experiments
+        # d_r_l_fingers = np.linalg.norm(r_finger_tip - l_finger_tip, axis=-1)
 
-        # Calculate reward components
-        r_dist = int(not grasped) * 100 * (self._last_d_grip2obj - d_grip2obj)
-        r_grasp = 0
-        r_lift = int(grasped) * 100 * (dz_obj - self._last_dz_obj)
-
-        # Update stateful variables
-        self._last_d_grip2obj = d_grip2obj
-        self._last_dz_obj = dz_obj
-
-        r = self._c_dist * r_dist + self._c_grasp * r_grasp + self._c_lift * r_lift
-        return r
+        return ((c_grasp * int(grasped)) - (c_dist * d_gripper_site))
+        return ((self._c_grasp * int(grasped)) - (self._c_dist * d_gripper_site))
 
     def is_success(self, obs, info):
         if self._never_done:
@@ -67,7 +57,7 @@ class PickTask(ComposableTask):
         obj_pos = info['world_obs']['{}_position'.format(self._pick_object)]
         grasped = info['grasped_{}'.format(self._pick_object)]
 
-        return grasped and obj_pos[2] > self._obj_lift_target
+        return False
 
     def done(self, obs, info):
         obj_pos = info['world_obs']['{}_position'.format(self._pick_object)]

@@ -121,7 +121,7 @@
                             <geom name="finger_tip_2" size="0.008 0.008 0.0185" pos="0 0.0045 -0.015" type="box" friction="0 0 0"/>
                           </body>
                         </body>
-                        <site name="grip" pos="0 0 0" rgba="0 0 0 0" size="0.02 0.02 0.02"></site>
+                        <site name="gripper_site" pos="0 0 0.11" rgba="0 0 0 1" size="0.01" type="sphere"></site>
                       </body>
 
                       <!--<body euler="0 0 0" name="gripper_link" pos="0.1664 0 0">-->
