@@ -46,12 +46,12 @@ RUN ["/bin/bash", "-c", \
   source /opt/ros/kinetic/setup.bash && \
   catkin_make"]
 
-# TEMP TODO: REMOVE BEFORE MERGING
+# TODO: REMOVE BEFORE MERGING
 RUN DEBIAN_FRONTEND=noninteractive apt -y install \
   tmux \
   vim
 
-# TEMP TODO: REMOVE BEFORE MERGING
+# TODO: REMOVE BEFORE MERGING
 RUN mkdir /root/ros_ws/src/get_task_srv
 COPY ./internal/temp/get_task_srv /root/ros_ws/src/get_task_srv
 
@@ -70,7 +70,7 @@ COPY internal/origin_detection.launch /root/
 COPY apriltag-entrypoint.sh /root/
 COPY sawyer-robot-apriltag.launch /root/
 
-# TEMP TODO: REMOVE BEFORE MERGING
+# TODO: REMOVE BEFORE MERGING
 RUN mkdir /root/data_collection
 RUN pwd
 COPY ./internal/temp/data_collection /root/data_collection

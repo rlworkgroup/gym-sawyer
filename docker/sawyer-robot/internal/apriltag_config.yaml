@@ -35,7 +35,7 @@ standalone_tags:
 tag_bundles:
   [
     {
-      name: 'peg',
+      name: 'peg_at',
       layout:
         [
           {id: 6, size: 0.037, x: 0.0000, y: 0.0000, z: 0.0000, qw: 1.0000, qx: 0.0000, qy: 0.0000, qz: 0.0000},

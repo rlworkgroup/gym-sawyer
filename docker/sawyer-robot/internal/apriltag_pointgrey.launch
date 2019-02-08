@@ -17,9 +17,10 @@
  		<env name="ROS_NAMESPACE" value="$(arg camera_name)" />
 	</node>
 
-	<node pkg="tf" type="static_transform_publisher" name="lid_broadcaster" args="-0.093 -0.039 -0.005 0 0 0 1 lid_at lid 100" /> 
-	<node pkg="tf" type="static_transform_publisher" name="box_broadcaster" args="-0.0725 -0.045 0 0 0 0 1 box_at box 100" />
-	<node pkg="tf" type="static_transform_publisher" name="hole_broadcaster" args="-0.0293 0.0388 0 0 0 0 1 lid_at hole 100" /> <!-- -0.0293, 0.0338 -->
+	<node pkg="tf" type="static_transform_publisher" name="lid_broadcaster" args="-0.093 -0.039 -0.005 0.50206 -0.50064 -0.50629 0.49074 lid_at lid 100" /> 
+	<node pkg="tf" type="static_transform_publisher" name="box_broadcaster" args="-0.0725 -0.045 0 -0.00777 -0.71737 0.00636 0.69616 box_at box 100" />
+	<node pkg="tf" type="static_transform_publisher" name="hole_broadcaster" args="-0.0293 0.0388 0 0 0 0 1 lid_at hole 100" />
+	<node pkg="tf" type="static_transform_publisher" name="peg_broadcaster" args="0 0 0 0.71309 -0.70109 -0.006 0.008 peg_at peg 100" />
  
 	<!-- Start apriltag detection --> 
 	<node pkg="apriltags2_ros" type="apriltags2_ros_continuous_node" name="$(arg node_namespace)" clear_params="true" output="screen" launch-prefix="$(arg launch_prefix)" >
