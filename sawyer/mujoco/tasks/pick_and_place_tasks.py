@@ -47,7 +47,6 @@ class PickTask(ComposableTask):
         # TODO: add this term for reward in future experiments
         # d_r_l_fingers = np.linalg.norm(r_finger_tip - l_finger_tip, axis=-1)
 
-        return ((c_grasp * int(grasped)) - (c_dist * d_gripper_site))
         return ((self._c_grasp * int(grasped)) - (self._c_dist * d_gripper_site))
 
     def is_success(self, obs, info):
