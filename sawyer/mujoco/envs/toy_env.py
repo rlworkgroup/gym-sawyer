@@ -245,6 +245,7 @@ class ToyEnv(MujocoEnv, Serializable):
             'robot_obs': robot_obs,
             'world_obs': world_obs,
             'gripper_position': self._robot.gripper_position,
+            'gripper_base_position': self._robot.gripper_position,
             'gripper_state': self._robot.gripper_state,
             'grasped_peg': grasped_peg_obs,
             'hole_site': hole_site,
