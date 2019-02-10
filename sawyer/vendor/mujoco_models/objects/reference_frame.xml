@@ -1,0 +1,24 @@
+<!-- 
+    MJCF fragment for a coordinate frame with 5cm axis markers to help localize
+    features in a MuJoCo simulation. Axis colors are:
+    x_axis -> red
+    y_axis -> green
+    z_axis -> blue
+ -->
+
+<mujoco>
+    <body name="ref">
+        <geom name="ref:origin"
+            type="sphere" size="0.005"
+            rgba="1 1 1 1" contype="0" conaffinity="0" />
+        <geom name="ref:x_axis"
+            type="cylinder" size="0.002 0.025" pos="0.025 0 0" quat="0 0.707 0 0.707"
+            rgba="1 0 0 1" contype="0" conaffinity="0" />
+        <geom name="ref:y_axis"
+            type="cylinder" size="0.002 0.025" pos="0 0.025 0" quat="0 0 0.707 0.707"
+            rgba="0 1 0 1" contype="0" conaffinity="0" />
+        <geom name="ref:z_axis"
+            type="cylinder" size="0.002 0.025" pos="0 0 0.025" quat="0 0 0 1"
+            rgba="0 0 1 1" contype="0" conaffinity="0" />
+    </body>
+</mujoco>
