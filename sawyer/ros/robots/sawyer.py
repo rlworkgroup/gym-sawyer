@@ -264,10 +264,7 @@ class Sawyer(Robot):
         self._gripper.set_position(position)
     
     def _set_gripper_end_pose(self, gripper_pose_delta):
-        cur_pos = np.array(self.gripper_pose['position'])
-        cur_ori = np.array(self.gripper_pose['orientation'])
-        pos_diff, _ = self._get_tf_between(self._obs_tip_frame, self._ctrl_tip_frame)
-        cur_pos[1] += pos_diff[1]
+        cur_pos, cur_ori = self._get_tf_between(self._base_frame, self._ctrl_tip_frame)
         new_pos = cur_pos + np.array(gripper_pose_delta)
         
         # ik_request returns valid joint positions if exists, 
@@ -277,12 +274,12 @@ class Sawyer(Robot):
         pose_msg.orientation = Quaternion(cur_ori[0], cur_ori[1], cur_ori[2], cur_ori[3])        
         joint_angles = self._limb.ik_request(pose_msg, self._ctrl_tip_frame)
         if joint_angles:
-            self._limb.move_to_joint_positions(joint_angles, timeout=0.5)
+            self._limb.move_to_joint_positions(joint_angles, timeout=0.001)
 
     def _move_to_start_position(self):
         if rospy.is_shutdown():
             return
-        self._limb.move_to_joint_positions(self._initial_joint_pos)
+        self._limb.move_to_joint_positions(self._initial_joint_pos, timeout=60.0)
         self._gripper.close()
         rospy.sleep(1.0)
 

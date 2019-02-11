@@ -124,6 +124,7 @@ class ToyEnv(SawyerEnv, Serializable):
             'gripper_state': self._robot.gripper_state,
             'grasped_peg': grasped_peg_obs,
             'hole_site': hole_pos,
+            'gripper_site': [0, 0, 0], #TODO: Fix this
             'lid_joint_state': lid_joint_state,
         }
 
