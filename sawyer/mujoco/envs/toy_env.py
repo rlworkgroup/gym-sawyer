@@ -252,7 +252,8 @@ class ToyEnv(MujocoEnv, Serializable):
             'lid_joint_state': lid_joint_state,
             'r_finger_tip': self.sim.data.get_body_xpos("r_gripper_r_finger_tip"),
             'l_finger_tip': self.sim.data.get_body_xpos("r_gripper_l_finger_tip"),
-            'gripper_site': self.sim.data.get_site_xpos("gripper_site")
+            'gripper_site': self.sim.data.get_site_xpos("gripper_site"),
+            'peg_site': self.sim.data.get_site_xpos("peg:site")
         }
 
         r = self.compute_reward(obs, info)

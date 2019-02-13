@@ -8,7 +8,7 @@
     <include file="shared.xml"></include>
   </default>
   <equality>
-    <weld body1="mocap" body2="right_gripper_base" solimp="0.94 0.97 0.001" solref="0.02 1"></weld>
+    <weld body1="mocap" body2="right_gripper_base" solimp="0.9 0.95 0.001" solref="0.02 1"></weld>
   </equality>
   <option timestep="0.002">
     <flag warmstart="enable"></flag>
@@ -32,9 +32,9 @@
   </worldbody>
 
   <actuator>
-    <position ctrllimited="true" ctrlrange="-0.0115 0.03" forcelimited="true" forcerange="-20 20" joint="r_gripper_l_finger_joint" kp="120000" name="slide_l_claw"
+    <position ctrllimited="true" ctrlrange="-0.0115 0.03" joint="r_gripper_l_finger_joint" kp="120000" name="slide_l_claw"
               user="1"/>
-    <position ctrllimited="true" ctrlrange="-0.03 0.0115" forcelimited="true" forcerange="-20 20" joint="r_gripper_r_finger_joint" kp="120000" name="slide_r_claw"
+    <position ctrllimited="true" ctrlrange="-0.03 0.0115" joint="r_gripper_r_finger_joint" kp="120000" name="slide_r_claw"
               user="1"/>
 
   </actuator>
