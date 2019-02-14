@@ -113,7 +113,7 @@ class Sawyer(Robot):
 
     @property
     def gripper_position(self):
-        return self._env.sim.data.get_body_xpos('r_gripper_r_finger_tip')
+        return self._env.sim.data.get_site_xpos('gripper_site')
 
     @property
     def gripper_state(self):
