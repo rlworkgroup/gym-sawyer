@@ -21,6 +21,8 @@ TOYENV_COLLISION_WHITELIST = COLLISION_WHITELIST + [
     # If you are okay with the grippers touching the lid
     # ("r_gripper_l_finger_tip", "box_lid"),
     # ("r_gripper_r_finger_tip", "box_lid"),
+    # ("r_gripper_l_finger_tip", "cradle_lid"),
+    # ("r_gripper_r_finger_tip", "cradle_lid"),
 
     # Need to whitelist objects with table
     ("pedestal_table", "box_base"),
@@ -29,6 +31,10 @@ TOYENV_COLLISION_WHITELIST = COLLISION_WHITELIST + [
     # Need to whitelist peg with box
     ("box_base", "peg"),
     ("box_lid", "peg"),
+
+    # Need to whitelist peg with cradle
+    ("cradle_base", "peg"),
+    ("cradle_lid", "peg"),
 
     # Need to whitelist peg with gripper
     ("r_gripper_l_finger", "peg"),

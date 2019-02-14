@@ -1,5 +1,5 @@
 <mujoco>
-  <body name="peg" pos="0.824 0.302 0.09">
+  <body name="peg" pos="0.824 0.302 0.183">
     <!-- contype/conaffinity set to not collide between head and body geoms -->
     <geom name="peg:head" type="box"
       rgba="0 0 1 1" size="0.025 0.025 0.025" pos="0 0 -0.025"
