@@ -8,13 +8,13 @@ import intera_interface
 from tf import TransformListener
 
 INITIAL_ROBOT_JOINT_POS = {
-    'right_j0': -0.79328125, 
-    'right_j1': 0.4875126953125,
-    'right_j2': -2.848359375, 
-    'right_j3': 0.9184482421875,
-    'right_j4': -2.932041015625,
-    'right_j5': -0.0460625,
-    'right_j6': 0.0387646484375,
+    'right_j0': -0.6741708984375, 
+    'right_j1': 0.241240234375,
+    'right_j2': -2.3595791015625, 
+    'right_j3': 0.425373046875,
+    'right_j4': 2.552513671875,
+    'right_j5': -0.31155078125,
+    'right_j6': -3.3876181640625,
 }
 
 print("\nInitializing ROS Node\n")

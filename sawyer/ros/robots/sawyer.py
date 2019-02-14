@@ -28,7 +28,8 @@ class Sawyer(Robot):
     def __init__(self,
                  moveit_group,
                  initial_joint_pos=INITIAL_JOINT_STATE,
-                 control_mode='position'):
+                 control_mode='position',
+                 extended_finger=True):
         """
         Sawyer class.
 
@@ -55,8 +56,10 @@ class Sawyer(Robot):
         self._moveit_group = moveit_group
         self._tf_listener = TransformListener()
         self._base_frame = "base"
-        self._ctrl_tip_frame = "right_gripper_tip"
-        self._obs_tip_frame = "right_gripper_r_finger_tip" 
+        if extended_finger:
+            self._tip_frame = "right_gripper_tip_ex"
+        else:
+            self._tip_frame = "right_gripper_tip"
 
         self._sv = StateValidity()
 
@@ -182,7 +185,7 @@ class Sawyer(Robot):
 
         :return: gripper pose
         """
-        gripper_pos, gripper_ori = self._get_tf_between(self._base_frame, self._obs_tip_frame)
+        gripper_pos, gripper_ori = self._get_tf_between(self._base_frame, self._tip_frame)
         gripper_pose = { 'position': gripper_pos, 'orientation': gripper_ori }
         return gripper_pose
 
@@ -264,7 +267,7 @@ class Sawyer(Robot):
         self._gripper.set_position(position)
     
     def _set_gripper_end_pose(self, gripper_pose_delta):
-        cur_pos, cur_ori = self._get_tf_between(self._base_frame, self._ctrl_tip_frame)
+        cur_pos, cur_ori = self._get_tf_between(self._base_frame, self._tip_frame)
         new_pos = cur_pos + np.array(gripper_pose_delta)
         
         # ik_request returns valid joint positions if exists, 
@@ -272,7 +275,7 @@ class Sawyer(Robot):
         pose_msg = Pose()
         pose_msg.position = Point(new_pos[0], new_pos[1], new_pos[2])
         pose_msg.orientation = Quaternion(cur_ori[0], cur_ori[1], cur_ori[2], cur_ori[3])        
-        joint_angles = self._limb.ik_request(pose_msg, self._ctrl_tip_frame)
+        joint_angles = self._limb.ik_request(pose_msg, self._tip_frame)
         if joint_angles:
             self._limb.move_to_joint_positions(joint_angles, timeout=0.001)
 
