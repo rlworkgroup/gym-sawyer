@@ -124,7 +124,8 @@ class ToyEnv(SawyerEnv, Serializable):
             'gripper_state': self._robot.gripper_state,
             'grasped_peg': grasped_peg_obs,
             'hole_site': hole_pos,
-            'gripper_site': [0, 0, 0], #TODO: Fix this
+            'gripper_site': np.array([0, 0, 0]), #TODO: Fix this
+            'peg_site': np.array([0, 0, 0]), #TODO: Fix this
             'lid_joint_state': lid_joint_state,
         }
 
@@ -228,9 +229,9 @@ class ToyEnv(SawyerEnv, Serializable):
         gripper_pos = self._robot.gripper_pose['position']
         max_xy_diff = 0.02
         max_z_diff = 0.2
-        return ( abs(peg_pos.x - gripper_pos.x) < max_xy_diff and
-            abs(peg_pos.y - gripper_pos.y) < max_xy_diff and
-            abs(peg_pos.z - gripper_pos.z) < max_z_diff )
+        return ( abs(peg_pos.x - gripper_pos[0]) < max_xy_diff and
+            abs(peg_pos.y - gripper_pos[1]) < max_xy_diff and
+            abs(peg_pos.z - gripper_pos[2]) < max_z_diff )
 
     @property
     def goal(self):

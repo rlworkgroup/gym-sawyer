@@ -61,6 +61,7 @@ class ToyEnv(MujocoEnv, Serializable):
                  randomize_start_jpos=False,
                  use_sticky_grasp=True,
                  collision_whitelist=TOYENV_COLLISION_WHITELIST,
+                 mujoco_steps=5,
                  **kwargs):
 
         warnings.warn(
@@ -91,7 +92,8 @@ class ToyEnv(MujocoEnv, Serializable):
             self._robot = robot or TaskSpaceSawyer(
                 self, randomize_start_jpos=randomize_start_jpos,
                 action_low=np.array([-0.05, -0.05, -0.05, -1.0]),
-                action_high=np.array([0.05, 0.05, 0.05, 1.0]))
+                action_high=np.array([0.05, 0.05, 0.05, 1.0]),
+                mujoco_steps=mujoco_steps)
             self._world = world or ToyWorld(self, xml_config=self._xml_config)
         else:
             warnings.warn("Unknown ToyEnv xml_config: {}".format(

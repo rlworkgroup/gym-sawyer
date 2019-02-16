@@ -11,9 +11,11 @@ class TaskSpaceSawyer(Sawyer):
                  env,
                  action_low=np.array([-0.15, -0.15, -0.15, -1.]),
                  action_high=np.array([0.15, 0.15, 0.15, 1.]),
+                 mujoco_steps=5,
                  **kwargs):
         self._action_low = action_low
         self._action_high = action_high
+        self._mujoco_steps = mujoco_steps
 
         super(TaskSpaceSawyer, self).__init__(env, **kwargs)
 
@@ -62,7 +64,7 @@ class TaskSpaceSawyer(Sawyer):
         self._env.sim.data.mocap_pos[0, :3] = self._env.sim.data.mocap_pos[0, :3] + action[:3]
         self._env.sim.data.mocap_quat[0, :] = np.array([0, 0, 1, 0])
         self.gripper_state = action[3]
-        for _ in range(5):
+        for _ in range(self._mujoco_steps):
             try:
                 self._env.sim.step()
             except Exception:
