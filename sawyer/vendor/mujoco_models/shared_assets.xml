@@ -13,7 +13,8 @@
   <mesh name="l6" file="l6.STL" />
   <mesh name="half_round_tip" file="half_round_tip.STL" />
   <mesh name="electric_gripper_base" file="electric_gripper_base.STL" />
-  <mesh name="extended_narrow" file="extended_narrow.STL"/>
+  <mesh name="finger_extended_narrow" file="extended_narrow.STL"/>
+  <mesh name="finger_extended_wide" file="extended_wide.STL"/>
   <mesh name="paddle_tip" file="paddle_tip.STL"/>
   <mesh name="yellow_bin_v1" file="yellow_bin_v1.STL"/>
   <mesh name="red_bin_v1" file="red_bin_v1.STL"/>
