@@ -10,7 +10,7 @@
   <equality>
     <weld body1="mocap" body2="right_gripper_base" solimp="0.9 0.95 0.001" solref="0.02 1"></weld>
   </equality>
-  <option timestep="0.002">
+  <option timestep="0.004">
     <flag warmstart="enable"></flag>
   </option>
 
@@ -27,9 +27,8 @@
       <geom conaffinity="0" contype="0" pos="0 0 0.1" rgba="1.0 1.0 1.0 0.5" size="0.01" type="sphere"></geom>
     </body>
 
-    <include file="objects/box_with_lid.xml"/>
-    <include file="objects/block_peg.xml"/>
-    <!-- <include file="objects/box_cradle.xml"/> -->
+    <include file="objects/box_with_lid_h.xml"/>
+    <include file="objects/block_peg_h.xml"/>
   </worldbody>
 
   <actuator>

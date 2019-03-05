@@ -88,7 +88,7 @@ class ToyEnv(MujocoEnv, Serializable):
                     self, randomize_start_jpos=randomize_start_jpos)
             self._world = world or ToyWorld(self, xml_config=self._xml_config)
         # task config: Task space control + 1 box w/ lid and 1 peg
-        elif self._xml_config == 'task':
+        elif self._xml_config == 'task' or self._xml_config == 'task_h':
             self._robot = robot or TaskSpaceSawyer(
                 self, randomize_start_jpos=randomize_start_jpos,
                 action_low=np.array([-0.05, -0.05, -0.05, -1.0]),
@@ -134,14 +134,16 @@ class ToyEnv(MujocoEnv, Serializable):
         self._collision_whitelist = []
         for c in collision_whitelist:
             # Hedge our bets by allowing both orderings
-            self._collision_whitelist.append((
-                self.sim.model.body_name2id(c[0]),
-                self.sim.model.body_name2id(c[1])
-            ))
-            self._collision_whitelist.append((
-                self.sim.model.body_name2id(c[1]),
-                self.sim.model.body_name2id(c[0])
-            ))
+            if (c[0] in self.sim.model.body_names and 
+                c[1] in self.sim.model.body_names):
+                self._collision_whitelist.append((
+                    self.sim.model.body_name2id(c[0]),
+                    self.sim.model.body_name2id(c[1])
+                ))
+                self._collision_whitelist.append((
+                    self.sim.model.body_name2id(c[1]),
+                    self.sim.model.body_name2id(c[0])
+                ))
 
         self._robot.initialize()
         self._world.initialize()
@@ -312,7 +314,7 @@ class ToyEnv(MujocoEnv, Serializable):
             obs.append(world_obs['peg_position'])
             obs.append(world_obs['peg_rotation'])
             obs = np.concatenate(obs).ravel()
-        elif self._xml_config == 'task':
+        elif self._xml_config == 'task' or self._xml_config == 'task_h':
             obs.append(robot_obs['sawyer_gripper_position'])
             obs.append(robot_obs['sawyer_gripper_state'])
             obs.append(world_obs['box_base_position'])

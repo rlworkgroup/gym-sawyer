@@ -114,7 +114,7 @@ class ToyWorld(World):
                  env,
                  xml_config,
                  box_lid_pos=0.,
-                 peg_pos=[0.824, 0.302, 0.183],
+                 peg_pos=[0.824, 0.302, 0.085],
                  peg_delta_range=[0., 0.]):
         """
         World containing a box with a lid, and a peg to open it.
@@ -130,7 +130,7 @@ class ToyWorld(World):
         self._boxes = []
         self._pegs = []
 
-        if self._xml_config == 'default' or self._xml_config == 'task':
+        if self._xml_config == 'default' or self._xml_config == 'task' or self._xml_config == 'task_h':
             box = BoxWithLid(
                 env=self._env,
                 initial_lid_pos=self._box_lid_pos,
