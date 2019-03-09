@@ -29,7 +29,7 @@
 
     <include file="objects/box_with_lid.xml"/>
     <include file="objects/block_peg.xml"/>
-    <!-- <include file="objects/box_cradle.xml"/> -->
+    <include file="objects/peg_holder.xml"/>
   </worldbody>
 
   <actuator>

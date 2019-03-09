@@ -27,8 +27,8 @@ class ReachTask(ComposableTask):
         gripper_pos = info['gripper_position']
         action = info['action']
 
-        r_dist = -np.linalg.norm(gripper_pos - self._location, axis=-1) * self._c_dist
-        r_act = -np.linalg.norm(action) * self._c_action
+        r_dist = -1 * np.linalg.norm(gripper_pos - self._location, axis=-1) * self._c_dist
+        r_act = -1 * np.linalg.norm(action) * self._c_action
 
         return r_dist + r_act
 
@@ -71,9 +71,9 @@ class ReachWithGraspTask(ComposableTask):
         action = info['action']
         grasped = info['grasped_{}'.format(self._grasp_object)]
 
-        r_dist = -np.linalg.norm(gripper_pos - self._location, axis=-1) * self._c_dist
+        r_dist = -1 * np.linalg.norm(gripper_pos - self._location, axis=-1) * self._c_dist
         r_grasp = grasped * self._c_grasp
-        r_act = -np.linalg.norm(action) * self._c_action
+        r_act = -1 * np.linalg.norm(action) * self._c_action
 
         return r_dist + r_grasp + r_act
 
