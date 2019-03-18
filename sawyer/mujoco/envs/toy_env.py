@@ -46,7 +46,6 @@ class ToyEnv(MujocoEnv, Serializable):
                  randomize_start_jpos=False,
                  collision_whitelist=TOYENV_COLLISION_WHITELIST,
                  **kwargs):
-        Serializable.quick_init(self, locals())
 
         warnings.warn(
             "ToyEnv is under development and has not been tested thoroughly. "
@@ -121,6 +120,8 @@ class ToyEnv(MujocoEnv, Serializable):
 
         self._robot.initialize()
         self._world.initialize()
+        Serializable.quick_init(self, locals())
+
 
     @property
     @overrides

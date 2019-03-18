@@ -117,7 +117,7 @@ class Sawyer(Robot):
 
     @property
     def gripper_state(self):
-        state = self._env.sim.data.ctrl[:2] / self.GRIPPER_STATE_SCALE
+        state = self._env.sim.data.ctrl[0] / self.GRIPPER_STATE_SCALE
         state = state * 2 - 1
         return state
 

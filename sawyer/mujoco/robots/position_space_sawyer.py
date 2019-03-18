@@ -25,7 +25,8 @@ class PositionSpaceSawyer(Sawyer):
     def get_observation(self):
         return {
             'control_scheme': 'position',
-            'sawyer_joint_position': self._env.sim.data.ctrl[:],
+            'sawyer_joint_position': self.joint_positions[2:],
+            'sawyer_gripper_state': np.array([self.gripper_state])
         }
 
     @property
@@ -40,7 +41,7 @@ class PositionSpaceSawyer(Sawyer):
         return Box(
             low=-np.inf,
             high=np.inf,
-            shape=(9,),
+            shape=(8,),
             dtype=np.float32)
 
     def step(self, action):

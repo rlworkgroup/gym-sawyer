@@ -27,6 +27,7 @@ class TaskSpaceSawyer(Sawyer):
         return {
             'control_scheme': 'task',
             'sawyer_gripper_position': self.gripper_position,
+            'sawyer_gripper_state': np.array([self.gripper_state])
         }
 
     @overrides
