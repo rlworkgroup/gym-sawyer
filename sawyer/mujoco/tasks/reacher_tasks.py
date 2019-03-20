@@ -54,7 +54,7 @@ class ReachWithGraspTask(ComposableTask):
                  never_done=False,
                  success_thresh=0.01,
                  completion_bonus=0.,
-                 c_dist=200,
+                 c_dist=500,
                  c_grasp=100):
         self._location = location
         self._never_done = never_done

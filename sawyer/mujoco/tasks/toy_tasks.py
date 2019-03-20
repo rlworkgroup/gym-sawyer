@@ -21,7 +21,7 @@ class InsertTask(ComposableTask):
                  success_thresh=0.01,
                  target_z_pos=0.182,
                  completion_bonus=0,
-                 c_insert=200,
+                 c_insert=400,
                  c_grasp=100):
         self._key_object = key_object
         self._lock_object = lock_object
@@ -85,7 +85,7 @@ class RemoveTask(ComposableTask):
                  success_thresh=0.01,
                  target_z_pos=0.22,
                  completion_bonus=0,
-                 c_remove=200,
+                 c_remove=400,
                  c_grasp=100):
         self._key_object = key_object
         self._lock_object = lock_object
@@ -150,7 +150,7 @@ class OpenTask(ComposableTask):
                  close_lid_state=-0.01,                 
                  completion_bonus=0,                 
                  c_open=50,
-                 c_keeppeginhole=100,
+                 c_keeppeginhole=200,
                  c_grasp=50):
         self._lid_object = lid_object
         self._key_object = key_object
@@ -212,7 +212,7 @@ class CloseTask(ComposableTask):
                  close_lid_state=-0.01,                 
                  completion_bonus=0,
                  c_close=50,
-                 c_keeppeginhole=100,
+                 c_keeppeginhole=200,
                  c_grasp=50):
         self._lid_object = lid_object
         self._key_object = key_object

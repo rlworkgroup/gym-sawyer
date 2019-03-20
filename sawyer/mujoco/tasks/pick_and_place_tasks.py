@@ -22,7 +22,7 @@ class PickTask(ComposableTask):
                  completion_bonus=0,
                  c_dist=1,
                  c_grasp=100,
-                 c_lift=200):
+                 c_lift=400):
         self._pick_object = pick_object
         self._never_done = never_done
         self._obj_lift_target = object_lift_target
