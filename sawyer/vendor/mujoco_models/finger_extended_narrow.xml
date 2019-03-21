@@ -5,7 +5,7 @@
     <geom size="0.029 0.05" quat="0 0 0.707107 0.707107" type="cylinder" />
     <body name="r_gripper_l_finger" pos="0 -0.0015 0.02">
         <inertial pos="0 0 0" quat="0 0 0 -1" mass="0.02" diaginertia="0.01 0.01 0.01" />
-        <joint name="r_gripper_l_finger_joint" pos="0 0 0" axis="0 1 0" type="slide" range="0 0.03" armature="100" damping="1000" limited="true" solimplimit="0.99 0.999 0.01" solreflimit="0.01 1"/>
+        <joint name="r_gripper_l_finger_joint" pos="0 0 0" axis="0 1 0" type="slide" range="0.02 0.045" armature="100" damping="1000" limited="true" solimplimit="0.99 0.999 0.01" solreflimit="0.01 1"/>
         <geom class="viz" mesh="finger_extended_narrow" euler="1.57 1.57 0" rgba="0.1 0.1 0.1 1"/>
         <geom size="0.005 0.00675 0.05635" contype="0" pos="0 0.01725 0.0615" quat="0 0 0 -1" type="box" rgba="0.1 0.1 0.1 1"/>
         <geom size="0.005 0.025 0.0085" contype="0" pos="-0.005 -0.003 0.0083" quat="0 0 0 -1" type="box" rgba="0.1 0.1 0.1 1"/>
@@ -17,7 +17,7 @@
     </body>
     <body name="r_gripper_r_finger" pos="0 0.0015 0.02">
         <inertial pos="0 0 0" mass="0.02" diaginertia="0.01 0.01 0.01" />
-        <joint name="r_gripper_r_finger_joint" pos="0 0 0" axis="0 1 0" type="slide" range="-0.03 0" armature="100" damping="1000" limited="true" solimplimit="0.99 0.999 0.01" solreflimit="0.01 1"/>
+        <joint name="r_gripper_r_finger_joint" pos="0 0 0" axis="0 1 0" type="slide" range="-0.045 -0.02" armature="100" damping="1000" limited="true" solimplimit="0.99 0.999 0.01" solreflimit="0.01 1"/>
         <geom class="viz" mesh="finger_extended_narrow" euler="1.57 -1.57 0" rgba="0.1 0.1 0.1 1"/>
         <geom size="0.005 0.00675 0.05635" contype="0" pos="0 -0.01725 0.0615" type="box" rgba="0.1 0.1 0.1 1"/>
         <geom size="0.005 0.025 0.0085" contype="0" pos="0.005 0.003 0.0083" type="box" rgba="0.1 0.1 0.1 1"/>
