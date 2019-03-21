@@ -3,15 +3,15 @@
 -->
 
 <mujoco>
-  <body name="peg_holder" pos="0.927 0.232 0.0298" euler="0 0 1.571">
+  <body name="peg_holder" pos="0.927 0.232 0.0548" euler="0 0 1.571">
     <geom name="peg_holder:b1" type="box"
       contype="1" conaffinity="1" condim="1"
-      size="0.015 0.025 0.002381" pos="0.036 0.1036 0.002381" euler="0 0 -0.523" rgba="0 0 0 0"/>
+      size="0.015 0.025 0.002381" pos="0.048 0.1036 0.002381" euler="0 0 -0.523" rgba="0 0 0 0"/>
     <geom name="peg_holder:b2" type="box"
       contype="1" conaffinity="1" condim="1"
       size="0.015 0.025 0.002381" pos="0.091 0.1036 0.002381" euler="0 0 0.523" rgba="0 0 0 0"/>
       <!--
-    <site name="test1" type="sphere" pos="0.036 0.1036 0.002381" size="0.01 0.01 0.01" />
+    <site name="test1" type="sphere" pos="0.048 0.1036 0.002381" size="0.01 0.01 0.01" />
     <site name="test2" type="sphere" pos="0.091 0.1036 0.002381" size="0.01 0.01 0.01" />
     -->
   </body>
