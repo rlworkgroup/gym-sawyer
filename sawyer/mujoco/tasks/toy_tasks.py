@@ -40,7 +40,7 @@ class InsertTask(ComposableTask):
         grasped = info['grasped_{}'.format(self._key_object)]
 
         if self._target_pos is None:            
-            self._target_pos = np.array([lock_site[0] + 0.008, lock_site[1], self._target_z_pos])
+            self._target_pos = np.array([lock_site[0], lock_site[1], self._target_z_pos])
 
         if self._init_dist is None:
             self._init_dist = np.linalg.norm(self._target_pos - key_pos, axis=-1)
@@ -83,7 +83,7 @@ class RemoveTask(ComposableTask):
                  lock_object,
                  never_done=False,
                  success_thresh=0.01,
-                 target_z_pos=0.22,
+                 target_z_pos=0.25,
                  completion_bonus=0,
                  c_remove=400,
                  c_grasp=100):

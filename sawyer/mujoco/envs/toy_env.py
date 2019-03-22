@@ -33,6 +33,15 @@ TOYENV_COLLISION_WHITELIST = COLLISION_WHITELIST + [
     # Need to whitelist peg with holder
     ("peg_holder", "peg"),
 
+    # Whitelist peg_holder with gripper for better training
+    ("r_gripper_l_finger", "peg_holder"),
+    ("r_gripper_r_finger", "peg_holder"),
+    ("r_gripper_l_finger_tip", "peg_holder"),
+    ("r_gripper_r_finger_tip", "peg_holder"),
+
+    # Need to whitelist box base with lid
+    ("box_base", "box_lid"),
+
     # Need to whitelist peg with gripper
     ("r_gripper_l_finger", "peg"),
     ("r_gripper_r_finger", "peg"),

@@ -93,7 +93,7 @@
                                                         <!-- </body>-->
                                                     <!--/body-->
                                                 <!--/body-->
-                      <include file="finger_extended_wide.xml" />                                                
+                      <include file="finger_extended_narrow.xml" />                                                
 
                       <!--<body euler="0 0 0" name="gripper_link" pos="0.1664 0 0">-->
                         <!--<inertial diaginertia="0.0024 0.0019 0.0013" mass="1.5175" pos="-0.09 -0.0001 -0.0017" quat="0 0.7071 0 0.7071"></inertial>-->
