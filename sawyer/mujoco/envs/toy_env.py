@@ -67,7 +67,7 @@ class ToyEnv(MujocoEnv, Serializable):
                  randomize_start_jpos=False,
                  use_sticky_grasp=True,
                  collision_whitelist=TOYENV_COLLISION_WHITELIST,
-                 mujoco_steps=5,
+                 mujoco_steps=10,
                  **kwargs):
 
         warnings.warn(

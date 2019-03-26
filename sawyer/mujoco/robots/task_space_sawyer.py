@@ -9,8 +9,8 @@ from sawyer.mujoco.robots import Sawyer
 class TaskSpaceSawyer(Sawyer):
     def __init__(self,
                  env,
-                 action_low=np.array([-0.15, -0.15, -0.15, -1.]),
-                 action_high=np.array([0.15, 0.15, 0.15, 1.]),
+                 action_low=np.array([-0.005, -0.005, -0.005, -1.]),
+                 action_high=np.array([0.005, 0.005, 0.005, 1.]),
                  mujoco_steps=5,
                  **kwargs):
         self._action_low = action_low
@@ -63,7 +63,7 @@ class TaskSpaceSawyer(Sawyer):
         reset_mocap2body_xpos(self._env.sim)
         self._env.sim.data.mocap_pos[0, :3] = self._env.sim.data.mocap_pos[0, :3] + action[:3]
         self._env.sim.data.mocap_quat[0, :] = np.array([0, 0, 1, 0])
-        self.gripper_state = action[3]
+        self.gripper_state = 1 if action[3] > 0 else -1
         for _ in range(self._mujoco_steps):
             try:
                 self._env.sim.step()

@@ -174,8 +174,7 @@ class Sawyer(Robot):
                 self._set_gripper_end_pose(commands[:3])
             
             # Rescale gripper state
-            gripper_state = self._rescale_value(commands[3], self.action_space.low[3], 
-                                self.action_space.high[3], self._gripper.MIN_POSITION, self._gripper.MAX_POSITION)
+            gripper_state =  self._gripper.MAX_POSITION if commands[3] > 0 else self._gripper.MIN_POSITION
             self._set_gripper_state(gripper_state)                    
 
     @property
@@ -200,7 +199,7 @@ class Sawyer(Robot):
         upper_bounds = np.array([])
         action_space = None
         if self._control_mode == 'task_space':
-            limit = np.array([0.15, 0.15, 0.15, 1.])
+            limit = np.array([0.005, 0.005, 0.005, 1.])
             lower_bounds = np.concatenate((lower_bounds, -limit)) 
             upper_bounds = np.concatenate((upper_bounds, limit))
             action_space = gym.spaces.Box(lower_bounds, upper_bounds, dtype=np.float32)
