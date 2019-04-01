@@ -24,7 +24,7 @@ class InsertTask(ComposableTask):
                  completion_bonus=0,
                  c_insert=400,
                  c_grasp=100,
-                 c_steady_lid=200):
+                 c_steady_lid=400):
         self._key_object = key_object
         self._lock_object = lock_object
         self._never_done = never_done
