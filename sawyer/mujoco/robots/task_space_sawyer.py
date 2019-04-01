@@ -9,8 +9,8 @@ from sawyer.mujoco.robots import Sawyer
 class TaskSpaceSawyer(Sawyer):
     def __init__(self,
                  env,
-                 action_low=np.array([-0.005, -0.005, -0.005, -1.]),
-                 action_high=np.array([0.005, 0.005, 0.005, 1.]),
+                 action_low=np.array([-0.01, -0.01, -0.01, -1.]),
+                 action_high=np.array([0.01, 0.01, 0.01, 1.]),
                  mujoco_steps=5,
                  **kwargs):
         self._action_low = action_low

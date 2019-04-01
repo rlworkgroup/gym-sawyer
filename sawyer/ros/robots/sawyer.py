@@ -199,7 +199,7 @@ class Sawyer(Robot):
         upper_bounds = np.array([])
         action_space = None
         if self._control_mode == 'task_space':
-            limit = np.array([0.005, 0.005, 0.005, 1.])
+            limit = np.array([0.01, 0.01, 0.01, 1.])
             lower_bounds = np.concatenate((lower_bounds, -limit)) 
             upper_bounds = np.concatenate((upper_bounds, limit))
             action_space = gym.spaces.Box(lower_bounds, upper_bounds, dtype=np.float32)
