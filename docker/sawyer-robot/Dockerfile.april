@@ -53,7 +53,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt -y install \
 
 # TODO: REMOVE BEFORE MERGING
 # RUN mkdir /root/ros_ws/src/get_task_srv
-# COPY ./internal/temp/get_task_srv /root/ros_ws/src/get_task_srv
+# COPY ./internal/get_task_srv /root/ros_ws/src/get_task_srv
 # RUN ["/bin/bash", "-c", \
 #  "cd ~/ros_ws/ && \
 #  ./intera.sh && \
@@ -71,7 +71,7 @@ COPY apriltag-entrypoint.sh /root/
 COPY sawyer-robot-apriltag.launch /root/
 
 # TODO: REMOVE BEFORE MERGING
-RUN mkdir /root/data_collection
-COPY ./internal/temp/data_collection /root/data_collection
+RUN mkdir /root/expert_data
+COPY ./internal/expert_data/ /root/expert_data
 
 ENTRYPOINT ["/root/apriltag-entrypoint.sh"]

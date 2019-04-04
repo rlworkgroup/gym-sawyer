@@ -66,9 +66,11 @@ RUN DEBIAN_FRONTEND=noninteractive apt -y install \
 
 # TODO: REMOVE BEFORE MERGING
 COPY ./docker/sawyer-robot/intera.sh /root/ros_ws
+COPY ./docker/sawyer-robot/internal/policies /root/
+
 # Uncomment if collecting data
 # RUN mkdir /root/ros_ws/src/get_task_srv 
-# COPY ./docker/sawyer-robot/internal/temp/get_task_srv /root/ros_ws/src/get_task_srv
+# COPY ./docker/sawyer-robot/internal/get_task_srv /root/ros_ws/src/get_task_srv
 # RUN /bin/bash -c 'cd /root/ros_ws/ && \
 #  source activate garage && \
 #  source /opt/ros/kinetic/setup.bash && \
