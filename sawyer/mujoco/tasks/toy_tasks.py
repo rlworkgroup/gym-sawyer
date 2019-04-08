@@ -19,7 +19,7 @@ class InsertTask(ComposableTask):
                  lock_object,
                  never_done=False,
                  success_thresh=0.01,
-                 target_z_pos=0.185,
+                 target_z_pos=0.189,
                  close_lid_state=0.,
                  completion_bonus=0,
                  c_insert=400,
