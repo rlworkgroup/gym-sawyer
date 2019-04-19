@@ -10,7 +10,7 @@
 -->
 
 <mujoco>
-  <body name="box_base" pos="0.756 -0.042 0.002" euler="0 0 1.571">
+  <body name="box_base" pos="0.856 -0.042 0.002" euler="0 0 1.571">
     <geom name="box_base:mesh" type="mesh" contype="0" conaffinity="0" rgba="0.87 0.72 0.52 1" mesh="box_body"/>
     <geom name="box_base:b1" type="box"
       contype="1" conaffinity="1"

@@ -58,12 +58,10 @@ def play(v):
             mobs = menv.reset()
             i = 0
             for step in range(v.max_rollout_length):
-                obs[14] = -obs[14]
-                obs[17] = -obs[17]
                 #obs[21:] = [1., 0., 0., 0.] #Peg ori
-                #obs[4:7] = [0.756, -0.042, 0.002] #Box pos
+                #obs[4:7] = [0.856, -0.042, 0.002] #Box pos
                 #obs[7:11] = [0.707, 0., 0., 0.707] #Box ori
-                #obs[11:14] = [0.75599857, -0.035, 0.1278] #Lid Pos
+                #obs[11:14] = [0.85599857, -0.035, 0.1278] #Lid Pos
                 #obs[14:18] = [0.707, 0., 0., 0.707] #Lid ori
                 #print_obs(mobs, "Sim")
                 #print_obs(obs, "Robot")

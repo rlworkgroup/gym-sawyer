@@ -24,7 +24,7 @@ class InsertTask(ComposableTask):
                  completion_bonus=0,
                  c_insert=400,
                  c_grasp=100,
-                 c_steady_lid=400):
+                 c_steady_lid=2000):
         self._key_object = key_object
         self._lock_object = lock_object
         self._never_done = never_done
@@ -52,7 +52,7 @@ class InsertTask(ComposableTask):
 
         r_steady_lid = -1 * np.linalg.norm(self._close_lid_state - lid_state)
         r_insert = (self._init_dist - np.linalg.norm(self._target_pos - key_pos, axis=-1)) / self._init_dist
-        
+      
         return (int(grasped) * (self._c_grasp + (self._c_insert * r_insert))) + (self._c_steady_lid * r_steady_lid)
 
     def is_success(self, obs, info):

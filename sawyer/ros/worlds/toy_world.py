@@ -207,13 +207,13 @@ class ToyWorld(World):
             # Box with Lid
             Gazebo.load_gazebo_model(
                 'box',
-                Pose(position=Point(x=0.756, y=-0.042, z=0.007)),
+                Pose(position=Point(x=0.856, y=-0.042, z=0.007)),
                 osp.join(World.MODEL_DIR, 'box_with_lid/model.urdf'))
             box = BoxWithLid(
                 name='box',
-                init_pose=Pose(Point(0.756, -0.042, 0.007), Quaternion(0, 0, 0, 1)),
+                init_pose=Pose(Point(0.856, -0.042, 0.007), Quaternion(0, 0, 0, 1)),
                 lid_name='lid',
-                lid_init_pose=Pose(Point(0.751, -0.037, 0.130), Quaternion(0, 0, 0, 1)),
+                lid_init_pose=Pose(Point(0.851, -0.037, 0.130), Quaternion(0, 0, 0, 1)),
                 hole_name='hole',                
                 resource=osp.join(World.MODEL_DIR, 'box_with_lid/model.urdf'))
             self._box = box
