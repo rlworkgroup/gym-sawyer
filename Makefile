@@ -26,7 +26,11 @@ build-nvidia-sawyer-sim: docker/docker-compose-nv-sim.yml docker/get_intera.sh
 
 build-nvidia-sawyer-robot: docker/docker-compose-nv-robot.yml docker/get_intera.sh
 	docker/get_intera.sh
-	docker-compose -f docker/docker-compose-nv-robot.yml build
+	docker-compose -f docker/docker-compose-nv-robot.yml build nvidia-sawyer-robot
+
+build-nvidia-sawyer-vr: docker/docker-compose-nv-robot.yml docker/get_intera.sh
+	docker/get_intera.sh
+	docker-compose -f docker/docker-compose-nv-robot.yml build nvidia-sawyer-vr
 
 run-garage-headless-ros: CONTAINER_NAME ?= garage-headless-ros
 run-garage-headless-ros: build-garage-headless-ros
@@ -92,3 +96,23 @@ endif
 		$(ADD_HOST) \
 		--name "sawyer-robot" \
 		gym-sawyer/nvidia-sawyer-robot
+
+run-nvidia-sawyer-vr: build-nvidia-sawyer-vr
+ifeq (,$(ADD_HOST))
+	$(error Set the environment variables SAWYER_HOST and SAWYER_IP)
+endif
+	xhost +local:docker
+	docker run \
+		--init \
+		-t \
+		--rm \
+		--privileged \
+		--runtime=nvidia \
+		-v /tmp/.X11-unix:/tmp/.X11-unix \
+		-e DISPLAY="${DISPLAY}" \
+		-e QT_X11_NO_MITSHM=1 \
+		--net="host" \
+		$(ADD_HOST) \
+		--volume=/dev/bus/usb:/dev/bus/usb:ro \
+		--name "sawyer-vr" \
+		gym-sawyer/nvidia-sawyer-vr $(RUN_CMD)

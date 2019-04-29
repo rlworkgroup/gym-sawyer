@@ -25,3 +25,9 @@ services:
       args:
         - PARENT_IMAGE=gym-sawyer/nvidia-ros-moveit
     image: gym-sawyer/nvidia-sawyer-robot
+  nvidia-sawyer-vr:
+     build:
+       context: ./sawyer-robot-vr
+       args:
+         - PARENT_IMAGE=gym-sawyer/nvidia-ros-moveit
+     image: gym-sawyer/nvidia-sawyer-vr
